@@ -3362,7 +3362,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     const en = pessoa && pessoa.idioma==='en';
     const base = 'Você lê bilhetes e vouchers de agência de viagens (Checkmate) para uma produtora de shows. Texto extraído do PDF:\n"""\n'+String(texto).slice(0,7000)+'\n"""\n'+
       'Dica do nome do arquivo: data '+info.data+(info.loc?', localizador '+info.loc:'')+(info.rota?', rota '+info.rota:'')+'. Passageiro: '+(pessoa?pessoa.nome:info.pessoa)+'.\n'+
-      (en?'Escreva os campos de texto livre ("nota") em INGLÊS, com datas no formato "Nov 9", porque a pessoa é de fora do Brasil.\n':'Escreva a "nota" em português do Brasil.\n')+
+      (en?'Escreva os campos de texto livre ("nota") em INGLÊS, com datas no formato "Nov 9", porque a pessoa é de fora do Brasil.\n':'Escreva a "nota" em português do Brasil.\n')+'A "nota" deve ser CURTA e direta (no máximo ~120 caracteres, itens separados por " · "): só o que não aparece no card — conexão e duração, dia de chegada se for outro, assentos, bagagem. Não repita voo, horário, localizador nem regras gerais (passaporte, antecedência de check-in, horários locais).\n'+
       'Não invente nada que não esteja no texto; use "" quando não souber. ';
     if(info.hotel){
       return await sampler.json(base+'É um voucher de HOTEL. Responda só JSON: {"hotel":"nome","address":"endereço","city":"cidade","tipo":"tipo de quarto","checkin":"DD/MM/AAAA","checkout":"DD/MM/AAAA","note":"horário de check-in/check-out, código de confirmação, regras importantes"}', {modelTier:'default'});
