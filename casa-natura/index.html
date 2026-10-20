@@ -1804,10 +1804,28 @@ ${blocoPrevisao()}Qualquer dúvida, estamos à disposição!`;
     steps.hidden=false;
   }
   show();
+  function manual(){
+    btn.hidden=true;
+    steps.style.borderColor='var(--amber)';
+    steps.innerHTML='Faça pelo menu do Chrome: toque nos <b>&#8942;</b> (três pontinhos, canto superior direito) &rarr; <b>Instalar app</b> ou <b>Adicionar à tela inicial</b> &rarr; <b>Instalar</b>. Depois procure o ícone <b>MV</b> na tela inicial ou na gaveta de apps. Se o link abriu dentro do WhatsApp ou Instagram, toque em <b>Abrir no Chrome</b> primeiro.';
+    steps.hidden=false;
+  }
   btn.addEventListener('click',function(){
-    if(!deferred) return;
-    deferred.prompt();
-    deferred.userChoice.then(function(){deferred=null;btn.hidden=true;bar.hidden=true;document.body.classList.remove('has-install-bar');}).catch(function(){});
+    if(!deferred){ manual(); return; }
+    var ev=deferred; deferred=null;
+    var answered=false;
+    setTimeout(function(){ if(!answered) manual(); },2500);
+    try{
+      ev.prompt();
+      ev.userChoice.then(function(c){
+        answered=true;
+        if(c && c.outcome==='accepted'){
+          btn.hidden=true;
+          steps.innerHTML='Instalando&hellip; O ícone <b>MV</b> aparece na tela inicial (em alguns Android, na gaveta de apps).';
+          steps.hidden=false;
+        } else { manual(); }
+      }).catch(function(){ answered=true; manual(); });
+    }catch(e){ answered=true; manual(); }
   });
   close.addEventListener('click',function(){
     bar.hidden=true;document.body.classList.remove('has-install-bar');
