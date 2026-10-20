@@ -247,6 +247,50 @@ body.print-mode > *:not(#mvPrintOverlay){display:none !important;}
 @media (prefers-reduced-motion: reduce){.spin{animation:none;}}
 
 
+
+/* ---- alternador Viagem / Cronograma ---- */
+.viewswitch{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--panel);border:1px solid var(--hairline);border-radius:var(--radius-m);padding:4px;max-width:440px;}
+.viewswitch button{font-family:var(--font-display);font-size:13px;font-weight:500;letter-spacing:.9px;text-transform:uppercase;color:var(--text-dim);background:transparent;border:0;border-radius:4px;padding:10px 12px;cursor:pointer;}
+.viewswitch button[aria-pressed="true"]{background:var(--blue-dim);color:var(--text);box-shadow:inset 0 -2px 0 var(--blue);}
+.viewswitch button:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+body.view-crono #folderTabs, body.view-crono .controls, body.view-crono #vivoSlot, body.view-crono #batchPanelSlot, body.view-crono #board{display:none!important;}
+
+/* ---- cronograma (estilo day sheet) ---- */
+.crono{display:flex;flex-direction:column;gap:14px;}
+.crono-note{font-size:11.5px;line-height:1.5;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber);border-radius:var(--radius-s);padding:9px 12px;}
+.crono-days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 4px;}
+.crono-day-btn{flex:0 0 auto;text-align:left;background:var(--panel);border:1px solid var(--hairline);border-radius:var(--radius-m);padding:9px 14px;cursor:pointer;color:var(--text-dim);font:inherit;}
+.crono-day-btn .dw{display:block;font-family:var(--font-display);font-size:10.5px;letter-spacing:1px;text-transform:uppercase;}
+.crono-day-btn .dd{display:block;font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--text);letter-spacing:.3px;}
+.crono-day-btn[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-dim);box-shadow:inset 0 -3px 0 var(--blue);}
+.crono-day-btn .today{display:inline-block;margin-left:6px;font-size:9px;color:var(--green);letter-spacing:.6px;}
+.crono-filter{display:flex;gap:6px;flex-wrap:wrap;}
+.dayhead{padding:14px 16px;border-bottom:1px solid var(--hairline);display:flex;flex-direction:column;gap:4px;}
+.dayhead .dh-title{font-family:var(--font-display);font-size:18px;font-weight:600;letter-spacing:.3px;text-wrap:balance;}
+.dayhead .dh-meta{font-size:11.5px;color:var(--text-dim);}
+.dayhead .dh-meta a{color:var(--blue);}
+.slot{display:grid;grid-template-columns:62px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--hairline);position:relative;}
+.slot:last-child{border-bottom:0;}
+.slot .t{font-variant-numeric:tabular-nums;font-weight:600;font-size:15px;color:var(--text);line-height:1.2;}
+.slot .t small{display:block;font-weight:400;font-size:10.5px;color:var(--text-faint);margin-top:2px;}
+.slot .body{min-width:0;display:flex;flex-direction:column;gap:3px;}
+.slot .what{font-family:var(--font-display);font-size:14.5px;font-weight:500;letter-spacing:.3px;color:var(--text);}
+.slot .where{font-size:11.5px;color:var(--text-dim);}
+.slot .where a{color:var(--blue);text-decoration:none;}
+.slot .note{font-size:11.5px;color:var(--text-dim);}
+.slot .who{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
+.slot .who span{display:inline-flex;align-items:center;gap:5px;font-size:10px;letter-spacing:.4px;text-transform:uppercase;color:var(--text-faint);}
+.slot.past .t, .slot.past .what{color:var(--text-faint);}
+.slot.now{background:var(--green-dim);}
+.slot.now::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);}
+.slot.next{background:var(--blue-dim);}
+.slot .flag{font-family:var(--font-display);font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;padding:2px 8px;border-radius:99px;align-self:flex-start;}
+.slot.now .flag{background:var(--green);color:#0b1020;}
+.slot.next .flag{background:var(--blue);color:#0b1020;}
+.slot.key .what{color:var(--amber);font-weight:600;}
+.crono-empty{padding:28px 16px;text-align:center;color:var(--text-faint);font-size:12px;}
+.crono-updated{font-size:10.5px;color:var(--text-faint);}
+
 /* ---- instalar como app ---- */
 .install-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--panel-raised);border-top:1px solid var(--hairline);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 -6px 24px rgba(0,0,0,.25);}
 .install-bar .ib-icon{width:36px;height:36px;border-radius:8px;flex-shrink:0;}
@@ -285,6 +329,13 @@ body.has-install-bar .wrap{padding-bottom:150px;}
       <button class="btn-batch-toggle" id="btnBatchToggle" type="button">📧 Envio em massa</button>
     </div>
   </header>
+
+  <div class="viewswitch" id="viewSwitch" role="group" aria-label="Escolher seção">
+    <button type="button" id="vsViagem" aria-pressed="true">✈︎ Minha viagem</button>
+    <button type="button" id="vsCrono" aria-pressed="false">🕒 Cronograma</button>
+  </div>
+
+  <section class="crono" id="cronoView" hidden></section>
 
   <nav class="tabs" id="folderTabs"></nav>
 
@@ -1832,6 +1883,135 @@ ${blocoPrevisao()}Qualquer dúvida, estamos à disposição!`;
     try{localStorage.setItem('mv-install-dismissed','1');}catch(e){}
   });
   window.addEventListener('appinstalled',function(){bar.hidden=true;document.body.classList.remove('has-install-bar');});
+})();
+</script>
+
+<script>
+/* =============== CRONOGRAMA (day sheet) ===============
+   Para atualizar: edite só o objeto CRONOGRAMA abaixo.
+   quem: TODOS, BANDA, BALLET, CREW, ARTISTICO, DJ (pode ser mais de um)
+   destaque: true pinta o item de âmbar (ex.: SHOW)                       */
+const CRONOGRAMA = {
+  exemplo: true,
+  atualizado: '20/10/2026',
+  dias: [
+    { data:'2026-11-09', titulo:'Dia do show · Casa Natura', cidade:'São Paulo', local:'Casa Natura', endereco:'',
+      itens:[
+        { hora:'06:00', titulo:'Saída do ônibus', local:'Rio de Janeiro · ponto a confirmar', quem:['BANDA','BALLET','CREW'], nota:'Chegue 15 min antes.' },
+        { hora:'13:00', titulo:'Check-in no hotel', local:'Hotel a confirmar', quem:['TODOS'] },
+        { hora:'14:30', titulo:'Van hotel → venue', local:'Lobby do hotel', quem:['CREW'] },
+        { hora:'15:00', fim:'17:00', titulo:'Montagem e line check', local:'Casa Natura', quem:['CREW'] },
+        { hora:'16:30', titulo:'Van hotel → venue', local:'Lobby do hotel', quem:['BANDA','BALLET'] },
+        { hora:'17:00', fim:'18:00', titulo:'Passagem de som', local:'Palco', quem:['BANDA','CREW'] },
+        { hora:'18:00', fim:'18:45', titulo:'Ensaio de marcação', local:'Palco', quem:['BALLET'] },
+        { hora:'19:00', titulo:'Jantar', local:'Camarim', quem:['TODOS'] },
+        { hora:'19:30', fim:'21:00', titulo:'Beleza e figurino', local:'Camarim Anitta', quem:['ARTISTICO'] },
+        { hora:'21:30', fim:'22:30', titulo:'SHOW', local:'Palco', quem:['TODOS'], destaque:true },
+        { hora:'23:15', titulo:'Van venue → hotel', local:'Saída de artistas', quem:['TODOS'] }
+      ]},
+    { data:'2026-11-10', titulo:'Retorno', cidade:'São Paulo → Rio de Janeiro', local:'', endereco:'',
+      itens:[
+        { hora:'11:00', titulo:'Check-out', local:'Recepção do hotel', quem:['TODOS'], nota:'Extras do quarto são por conta de cada um.' },
+        { hora:'11:30', titulo:'Saída do ônibus', local:'Lobby do hotel', quem:['BANDA','BALLET','CREW'] }
+      ]}
+  ]
+};
+
+(function(){
+  const GRUPOS = [['TODOS','Todos'],['BANDA','Banda'],['BALLET','Ballet'],['CREW','Crew'],['ARTISTICO','Equipe A']];
+  const NOMES = {BANDA:'Banda',BALLET:'Ballet',CREW:'Crew',ARTISTICO:'Equipe A',DJ:'DJ'};
+  const DOW = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const view = document.getElementById('cronoView');
+  const bV = document.getElementById('vsViagem'), bC = document.getElementById('vsCrono');
+  if(!view || !bV || !bC) return;
+
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // agora em São Paulo, como "YYYY-MM-DD" e minutos do dia
+  function agoraSP(){
+    try{
+      const f = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+      const o = {}; f.formatToParts(new Date()).forEach(x=>o[x.type]=x.value);
+      return { data:o.year+'-'+o.month+'-'+o.day, min:(parseInt(o.hour,10)%24)*60+parseInt(o.minute,10) };
+    }catch(e){ const d=new Date(); return {data:d.toISOString().slice(0,10), min:d.getHours()*60+d.getMinutes()}; }
+  }
+  const toMin = h => { const m=/^(\d{1,2}):(\d{2})/.exec(h||''); return m ? (+m[1])*60+(+m[2]) : null; };
+
+  const dias = (CRONOGRAMA.dias||[]).slice().sort((a,b)=>a.data<b.data?-1:1);
+  let grupo = lsGet('mv-crono-grupo') || 'TODOS';
+  if(!GRUPOS.some(g=>g[0]===grupo)) grupo='TODOS';
+  let diaSel = null;
+  (function(){ const hoje=agoraSP().data; const d=dias.find(x=>x.data>=hoje); diaSel = d ? d.data : (dias.length? dias[dias.length-1].data : null); })();
+
+  function rotuloDia(iso){ const d=new Date(iso+'T12:00:00'); return { dw:DOW[d.getDay()], dd:String(d.getDate()).padStart(2,'0')+' '+MES[d.getMonth()] }; }
+
+  function render(){
+    const now = agoraSP();
+    let h = '';
+    if(CRONOGRAMA.exemplo){
+      h += '<div class="crono-note"><b>EXEMPLO.</b> Horários ilustrativos para mostrar o formato. O cronograma oficial entra aqui assim que for fechado pela produção.</div>';
+    }
+    if(!dias.length){
+      view.innerHTML = h + '<div class="panel"><div class="crono-empty">O cronograma ainda não foi publicado. Assim que a produção fechar os horários, eles aparecem aqui.</div></div>';
+      return;
+    }
+    h += '<div class="crono-days" role="group" aria-label="Dias">';
+    dias.forEach(d=>{
+      const r = rotuloDia(d.data);
+      h += '<button type="button" class="crono-day-btn" data-dia="'+d.data+'" aria-pressed="'+(d.data===diaSel)+'"><span class="dw">'+r.dw+(d.data===now.data?'<span class="today">HOJE</span>':'')+'</span><span class="dd">'+r.dd+'</span></button>';
+    });
+    h += '</div><div class="crono-filter" role="group" aria-label="Filtrar por equipe">';
+    GRUPOS.forEach(g=>{ h += '<button type="button" class="chip'+(g[0]===grupo?' active':'')+'" data-grupo="'+g[0]+'">'+g[1]+'</button>'; });
+    h += '</div>';
+
+    const dia = dias.find(d=>d.data===diaSel) || dias[0];
+    const itens = (dia.itens||[]).filter(it => grupo==='TODOS' || (it.quem||[]).includes('TODOS') || (it.quem||[]).includes(grupo))
+                    .slice().sort((a,b)=>(toMin(a.hora)??0)-(toMin(b.hora)??0));
+    const ehHoje = dia.data===now.data, passou = dia.data<now.data;
+    // qual item está acontecendo agora e qual é o próximo
+    let idxNow=-1, idxNext=-1;
+    if(ehHoje){
+      itens.forEach((it,i)=>{ const a=toMin(it.hora), b=toMin(it.fim); if(a!=null && now.min>=a && (b!=null ? now.min<b : now.min<a+30)) idxNow=i; });
+      idxNext = itens.findIndex(it=>{ const a=toMin(it.hora); return a!=null && a>now.min; });
+    }
+    const r = rotuloDia(dia.data);
+    const mapa = dia.endereco ? ' · <a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(dia.endereco)+'" target="_blank" rel="noopener">abrir no mapa</a>' : '';
+    h += '<div class="panel"><div class="dayhead"><div class="eyebrow">'+r.dw+' · '+r.dd+(dia.cidade?' · '+esc(dia.cidade):'')+'</div><div class="dh-title">'+esc(dia.titulo||'')+'</div>'+((dia.local||dia.endereco)?'<div class="dh-meta">'+esc([dia.local,dia.endereco].filter(Boolean).join(' · '))+mapa+'</div>':'')+'</div>';
+    if(!itens.length){
+      h += '<div class="crono-empty">Nada marcado para '+esc(GRUPOS.find(g=>g[0]===grupo)[1])+' neste dia.</div>';
+    }
+    itens.forEach((it,i)=>{
+      const a=toMin(it.hora);
+      let cls='slot'; let flag='';
+      if(it.destaque) cls+=' key';
+      if(i===idxNow){ cls+=' now'; flag='<span class="flag">Agora</span>'; }
+      else if(i===idxNext && idxNow!==i){ cls+=' next'; flag='<span class="flag">Próximo</span>'; }
+      else if(passou || (ehHoje && a!=null && a<now.min)) cls+=' past';
+      const quem = (it.quem||[]).includes('TODOS') ? '<span>Todos</span>' : (it.quem||[]).map(q=>'<span><i class="team-dot dot-'+q+'"></i>'+esc(NOMES[q]||q)+'</span>').join('');
+      h += '<div class="'+cls+'"><div class="t">'+esc(it.hora||'—')+(it.fim?'<small>até '+esc(it.fim)+'</small>':'')+'</div><div class="body">'+flag+'<div class="what">'+esc(it.titulo)+'</div>'+(it.local?'<div class="where">'+esc(it.local)+'</div>':'')+(it.nota?'<div class="note">'+esc(it.nota)+'</div>':'')+'<div class="who">'+quem+'</div></div></div>';
+    });
+    h += '</div><div class="crono-updated">Atualizado em '+esc(CRONOGRAMA.atualizado||'')+'. Horários em horário de Brasília. Mudanças são avisadas pela produção.</div>';
+    view.innerHTML = h;
+    view.querySelectorAll('[data-dia]').forEach(b=>b.onclick=()=>{ diaSel=b.dataset.dia; render(); });
+    view.querySelectorAll('[data-grupo]').forEach(b=>b.onclick=()=>{ grupo=b.dataset.grupo; lsSet('mv-crono-grupo',grupo); render(); });
+  }
+
+  function setView(v){
+    const crono = v==='crono';
+    document.body.classList.toggle('view-crono', crono);
+    view.hidden = !crono;
+    bV.setAttribute('aria-pressed', String(!crono));
+    bC.setAttribute('aria-pressed', String(crono));
+    lsSet('mv-view', v);
+    if(crono) render();
+  }
+  bV.onclick = ()=>setView('viagem');
+  bC.onclick = ()=>setView('crono');
+  if(location.hash==='#cronograma' || lsGet('mv-view')==='crono') setView('crono');
+  setInterval(()=>{ if(!view.hidden) render(); }, 60000);
 })();
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
