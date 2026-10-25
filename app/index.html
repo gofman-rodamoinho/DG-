@@ -568,6 +568,8 @@ body.agenda-mode #mvBack{display:none!important;}
 .cal-legenda i{font-style:normal;color:var(--amber);}
 .cal-legenda .lg-show{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--blue-dim);border:1px solid var(--blue);vertical-align:-1px;margin-right:4px;}
 @media (max-width:600px){ .cal-ev{pointer-events:none;} }
+.cal-item.sem-pasta{cursor:default;}
+.cal-item.sem-pasta:hover{border-color:var(--hairline);background:var(--panel);}
 .cal-lista-t{font-family:var(--font-display);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);}
 @media (max-width:600px){
   .cal-day{min-height:44px;padding:3px 2px;align-items:center;}
@@ -2552,6 +2554,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
 
   window.__mv = { WEEKS, WEEK_ORDER, render, simplifyStatus, baixarDiaPdf, gerarDiaPdfBytes };
   window.__mvAgenda = { lista: () => WEEK_ORDER.filter(visivel).map(wid => ({ id:wid, label:WEEKS[wid].label, sub:WEEKS[wid].sub, periodo:PERIODOS[wid]||null, oculto: !!(isStaff() && LIBERADOS && LIBERADOS[wid] !== true), encerrado: encerrado(wid) })),
+    staff: () => isStaff(),
     abrir: wid => { state.view = wid; state.team='ALL'; state.status='ALL'; state.q=''; state.openPerson=null; const si = document.getElementById('searchInput'); if(si) si.value=''; batchSelected.clear(); batchOpen = false; render(); } };
 })();
 
@@ -4240,7 +4243,17 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   // dias de SHOW de cada compromisso (só estes entram no calendário; datas de viagem ficam no Minha Viagem do evento)
   const SHOWS = { semana1:['2026-11-09'], rtm1:['2026-10-31'], rtm2:['2026-11-07'], grammy:['2026-11-12'], clipeteto:['2026-11-30'], carnatal:['2026-12-04'],
     meli:['2026-10-17'], angelica:['2026-10-15'], eda1:['2027-01-09','2027-01-10'], eda2:['2027-01-16','2027-01-17'], eda3:['2027-01-23','2027-01-24'], eda4:['2027-01-30','2027-01-31'] };
-  const diasShow = ev => SHOWS[ev.id] || (ev.periodo ? [ev.periodo[0]] : []);
+  const diasShow = ev => SHOWS[ev.id] || ev.dias || (ev.periodo ? [ev.periodo[0]] : []);
+  // Carnaval fev/2027 (planilha "Anitta @ Scheduled Shows 2026/2027", aba SCHEDULE): bloqueados, só para quem vê os 🔒; sem pasta e sem travel days
+  const EXTRAS = [
+    { id:'cv-0205-ssa', label:'SHOW BDA', sub:'05/02/2027 · Salvador - BA', dias:['2027-02-05'] },
+    { id:'cv-0206-slz', label:'SHOW BDA', sub:'06/02/2027 · São Luis - MA', dias:['2027-02-06'] },
+    { id:'cv-0207-rec', label:'SHOW CARNAVAL', sub:'07/02/2027 · Recife - PE', dias:['2027-02-07'] },
+    { id:'cv-0208-rj1', label:'SHOW CARNAVAL', sub:'08/02/2027 · Rio de Janeiro - RJ', dias:['2027-02-08'] },
+    { id:'cv-0208-rj2', label:'SHOW CARNAVAL', sub:'08/02/2027 · Rio de Janeiro - RJ', dias:['2027-02-08'] },
+    { id:'cv-0213-rj-bda', label:'SHOW BDA', sub:'13/02/2027 · Rio de Janeiro - RJ', dias:['2027-02-13'] },
+    { id:'cv-0213-rj-carn', label:'SHOW CARNAVAL', sub:'13/02/2027 · Rio de Janeiro - RJ', dias:['2027-02-13'] }
+  ].map(e => Object.assign(e, { oculto:true, semPasta:true, encerrado:false, periodo:null }));
   // ficha do evento (planilha "Anitta @ Scheduled Shows 2026/2027"): só compromissos liberados para a equipe
   const FICHA = {
     rtm1: { status:'Confirmado', equipe:'Equipe completa', formato:'Show normal (banda 12 + ballet + equipe técnica)' },
@@ -4266,7 +4279,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   }
   let diaSel = null;
   const body = document.body;
-  function lista(){ try{ return (window.__mvAgenda && window.__mvAgenda.lista()) || []; }catch(e){ return []; } }
+  function lista(){ try{ const a = window.__mvAgenda; const base = (a && a.lista()) || []; return (a && a.staff && a.staff()) ? base.concat(EXTRAS) : base; }catch(e){ return []; } }
   function cidade(ev){ const p = String(ev.sub||'').split('·'); return (p.length>1 ? p.slice(1).join('·') : '').trim(); }
   function quando(ev){ const ds = diasShow(ev); if(!ds.length){ const p = String(ev.sub||'').split('·'); return (p[0]||'').trim(); }
     const dm = ds.map(d=>d.slice(8,10)+'/'+d.slice(5,7)); return (dm.length>1 ? dm.slice(0,-1).join(', ')+' e '+dm[dm.length-1] : dm[0]) + '/' + ds[ds.length-1].slice(0,4); }
@@ -4326,6 +4339,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
       ? '<div class="cal-vazio">Nenhum compromisso liberado ainda.</div>'
       : (itens.length ? itens.map(e=>{
           const p0 = diasShow(e).find(d=>d>=ini && d<=fim) || diasShow(e)[0] || '';
+          if(e.semPasta) return '<div class="cal-item sem-pasta"><span class="ci-data"><b>'+(p0?p0.slice(8,10):'—')+'</b><span>'+(p0?MESC[+p0.slice(5,7)-1]:'')+'</span></span><span class="ci-info"><span class="ci-nome">'+esc(nome(e))+'</span><span class="ci-sub">'+esc(quando(e))+(cidade(e)?' · '+esc(cidade(e)):'')+'</span></span><span></span></div>';
           return '<button type="button" class="cal-item'+(e.encerrado?' enc':'')+'" data-wid="'+esc(e.id)+'"><span class="ci-data"><b>'+(p0?p0.slice(8,10):'—')+'</b><span>'+(p0?MESC[+p0.slice(5,7)-1]:'')+'</span></span>'
             + '<span class="ci-info"><span class="ci-nome">'+esc(nome(e))+(e.encerrado?'<span class="enc">Encerrado</span>':'')+'</span><span class="ci-sub">'+esc(quando(e))+(cidade(e)?' · '+esc(cidade(e)):'')+'</span></span><span class="ci-go" aria-hidden="true">›</span></button>';
         }).join('') : '<div class="cal-vazio">Nenhum compromisso neste mês.</div>');
