@@ -713,9 +713,9 @@ body:not(.is-staff) [data-act="pdf-dia"]{display:none!important;}
   .cal-ev:hover{background:var(--blue-dim);color:var(--text);}
 }
 /* ===== calendário: dia de show = borda amarelo-clara; nome do show como rótulo ===== */
-:root{ --show-line:#e3c35a; }
-@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ --show-line:#e2b93b; } }
-:root[data-theme="light"]{ --show-line:#e2b93b; }
+:root{ --show-line:#bea766; }
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ --show-line:#efd27c; } }
+:root[data-theme="light"]{ --show-line:#efd27c; }
 .cal-day{position:relative;}
 .cal-day.show::after{content:"";position:absolute;inset:0;border:2px solid var(--show-line);pointer-events:none;}
 .cal-ev,.cal-ev:hover{background:transparent;border:0;border-radius:0;padding:1px 2px;color:var(--text);}
