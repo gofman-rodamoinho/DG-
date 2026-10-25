@@ -786,7 +786,7 @@ body:not(.is-staff) [data-act="pdf-dia"]{display:none!important;}
       <div class="cal-nav"><button type="button" id="calPrev" aria-label="Mês anterior">‹</button><b id="calMes"></b><button type="button" id="calNext" aria-label="Próximo mês">›</button></div>
       <div class="cal-salto" id="calSaltoBox" hidden><label>Ir para o mês <select id="calSalto"></select></label></div>
       <div class="cal-grid" id="calGrid"></div>
-      <div class="cal-legenda"><span><span class="lg-show"></span>Dia de show</span><span><i>✈</i> Travel day (voo da equipe)</span><span>Toque na data para ver a ficha</span></div>
+      <div class="cal-legenda"><span><span class="lg-show"></span>Dia de show</span><span><i>✈</i> Travel day (voo da equipe)</span><span><i>🚌</i> Ônibus fretado (equipe)</span><span>Toque na data para ver a ficha</span></div>
     </div>
     <div class="cal-modal" id="calModal" hidden><div class="cal-ficha" id="calFicha" role="dialog" aria-modal="true" aria-label="Ficha do dia"></div></div>
     <div class="cal-lista-t" id="calListaT"></div>
@@ -4444,23 +4444,44 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   // travel day (✈): só no dia ANTERIOR a um dia de show real do evento, e só se houver voo de BANDA, BALLET ou CREW nesse dia
   // (categoria da própria ficha; ARTISTICO e DJ não contam). Pode coexistir com a borda de show (Daniel, 25/10).
   // Caso incerto, sem avião até decisão: 30/01/2027 — os voos do dia levam a equipe ao show do MESMO dia (Curitiba), não ao de 31/01.
-  const TV_INCERTO = { eda4:['2027-01-30'] };
+  const TV_INCERTO = {};   // 30/01/2027 deixou de ser incerto (Daniel, 25/10): há pernas B emitidas nesse dia
+  // ✈ também em qualquer dia com perna de VOO de banda/ballet/crew com status EMITIDO ou ALTERADO (voltas e deslocamentos entre shows)
+  const VOO_EMITIDO = /^(EMITIDO|ALTERADO)$/i;
+  // 🚌 dias com perna de ÔNIBUS FRETADO (banda/ballet/crew) com data. Fora: pernas individuais de ônibus de linha
+  // (Águia Branca / Expresso do Sul, rodoviária Tietê) que vieram marcadas como fretado — caso a decidir
+  const ONIBUS_INCERTO = { rtm1:['2026-11-01'], rtm2:['2026-11-06','2026-11-08'] };
+  let TV_CACHE = {};
+  const isoPerna = l => { const m = /^(\d{2})\/(\d{2})/.exec(String(l.data||'').trim()); if(!m) return null; const mm = +m[2]; if(mm<1 || mm>12) return null; return (mm >= 10 ? 2026 : 2027)+'-'+m[2]+'-'+m[1]; };
+  function diasOnibus(wid){
+    const ck = 'b' + wid; if(TV_CACHE[ck]) return TV_CACHE[ck];
+    const w = window.__mv && window.__mv.WEEKS && window.__mv.WEEKS[wid]; if(!w || !Array.isArray(w.people)) return [];
+    const set = new Set();
+    w.people.forEach(p => { if(!TV_GRUPOS.includes(String(p.categoria||'').toUpperCase())) return; (p.legs||[]).forEach(l => {
+      if(!l || !/ONIBUS FRETADO/i.test(String(l.status||''))) return;
+      const d = isoPerna(l); if(d) set.add(d);
+    }); });
+    return TV_CACHE[ck] = [...set].filter(d => d >= hoje && !(ONIBUS_INCERTO[wid]||[]).includes(d)).sort();
+  }
   const TV_GRUPOS = ['BANDA','BALLET','CREW'];
   const menos1 = iso => { const d = new Date(iso+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()-1); return d.toISOString().slice(0,10); };
   function diasVoo(wid){
+    const ck = 'v' + wid; if(TV_CACHE[ck]) return TV_CACHE[ck];
     const w = window.__mv && window.__mv.WEEKS && window.__mv.WEEKS[wid]; if(!w || !Array.isArray(w.people)) return [];
-    const voos = new Set();
+    const voos = new Set(), emitidos = new Set();
     w.people.forEach(p => { if(!TV_GRUPOS.includes(String(p.categoria||'').toUpperCase())) return; (p.legs||[]).forEach(l => {
       if(!l || SEM_VOO.test(String(l.status||'')) || l.bus_label) return;
       const m = /^(\d{2})\/(\d{2})/.exec(String(l.data||'').trim()); if(!m) return;
       const mm = +m[2]; if(mm<1 || mm>12) return;
-      voos.add((mm >= 10 ? 2026 : 2027)+'-'+m[2]+'-'+m[1]);
+      const dd = (mm >= 10 ? 2026 : 2027)+'-'+m[2]+'-'+m[1];
+      voos.add(dd); if(VOO_EMITIDO.test(String(l.status||'').trim())) emitidos.add(dd);
     }); });
-    return [...new Set((SHOWS[wid]||[]).concat(VESPERA_EXTRA[wid] || []).map(menos1))].filter(d => voos.has(d) && !(TV_INCERTO[wid]||[]).includes(d) && d >= hoje).sort();
+    const vesperas = [...new Set((SHOWS[wid] || []).concat(VESPERA_EXTRA[wid] || []).map(menos1))].filter(d => voos.has(d) && !(TV_INCERTO[wid]||[]).includes(d));
+    return TV_CACHE[ck] = [...new Set(vesperas.concat([...emitidos]))].filter(d => d >= hoje && !(TV_FORA[wid]||[]).includes(d)).sort();
   }
   let diaSel = null;
   const body = document.body;
   function lista(){ try{
+    TV_CACHE = {};
     const a = window.__mvAgenda; const base = ((a && a.lista()) || []).filter(e => { const ds = diasShow(e); return !ds.length || ds[ds.length-1] >= hoje; });   // calendário só de hoje pra frente
     if(!PLAN) return (a && a.staff && a.staff()) ? base.concat(EXTRAS) : base;
     const usados = new Set(), out = [];
@@ -4500,7 +4521,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     return [ +base.slice(0,4), +base.slice(5,7)-1 ];
   }
   function limites(evs){
-    const ds = evs.flatMap(e=>diasShow(e).concat(diasVoo(e.id))).sort();
+    const ds = evs.flatMap(e=>diasShow(e).concat(diasVoo(e.id), diasOnibus(e.id))).sort();
     if(!ds.length) return null;
     const ini = ds[0].slice(0,7) < hoje.slice(0,7) ? hoje.slice(0,7) : ds[0].slice(0,7);
     return [ini, ds[ds.length-1].slice(0,7)];
@@ -4531,8 +4552,9 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
       const dia = iso(y,m,d);
       const doDia = evs.filter(e=>diasShow(e).includes(dia));
       const viaja = evs.filter(e=>diasVoo(e.id).includes(dia));
-      const tem = doDia.length || viaja.length;
-      h += '<div class="cal-day'+(dia===hoje?' hoje':'')+(tem?' tem':'')+(doDia.length?' show':'')+(dia===diaSel?' sel':'')+'"'+(tem?' data-dia="'+dia+'" role="button" tabindex="0" aria-label="'+esc(d+' de '+MES[m]+': ver ficha')+'"':'')+'><span class="d">'+d+(viaja.length?' <span class="tv" title="Travel day">✈</span>':'')+'</span>'
+      const onib = evs.filter(e=>diasOnibus(e.id).includes(dia));
+      const tem = doDia.length || viaja.length || onib.length;
+      h += '<div class="cal-day'+(dia===hoje?' hoje':'')+(tem?' tem':'')+(doDia.length?' show':'')+(dia===diaSel?' sel':'')+'"'+(tem?' data-dia="'+dia+'" role="button" tabindex="0" aria-label="'+esc(d+' de '+MES[m]+': ver ficha')+'"':'')+'><span class="d">'+d+(viaja.length?' <span class="tv" title="Travel day">✈</span>':'')+(onib.length?' <span class="tv bus" title="Ônibus fretado (equipe)">🚌</span>':'')+'</span>'
         + doDia.map(e=>'<span class="cal-ev'+(e.encerrado?' enc':'')+(e.plan && passado(e)?' passado':'')+'" title="'+esc(nome(e))+'">'+esc(curto(e))+'</span>').join('')
         + '</div>';
     }
@@ -4572,7 +4594,8 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     if(!diaSel){ modal.hidden = true; box.innerHTML = ''; return; }
     const doDia = evs.filter(e=>diasShow(e).includes(diaSel));
     const viaja = evs.filter((e,i,arr)=>diasVoo(e.id).includes(diaSel) && arr.findIndex(x=>x.id===e.id)===i);
-    if(!doDia.length && !viaja.length){ modal.hidden = true; box.innerHTML = ''; return; }
+    const onib = evs.filter((e,i,arr)=>diasOnibus(e.id).includes(diaSel) && arr.findIndex(x=>x.id===e.id)===i);
+    if(!doDia.length && !viaja.length && !onib.length){ modal.hidden = true; box.innerHTML = ''; return; }
     const dt = diaSel.slice(8,10)+'/'+diaSel.slice(5,7)+'/'+diaSel.slice(0,4);
     let h = '<div class="cf-h"><span>'+dt+'</span><button type="button" class="cf-x" data-fechar="1" aria-label="Fechar ficha">✕</button></div>';
     doDia.forEach(e=>{
@@ -4593,6 +4616,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
         + '</div>';
     });
     viaja.forEach(e=>{ h += '<div class="cf-ev"><span class="cf-tv">✈ Travel day · '+esc(nome(e))+'</span><span class="cf-l">Voo da equipe cadastrado no Minha Viagem deste compromisso.</span></div>'; });
+    onib.forEach(e=>{ h += '<div class="cf-ev"><span class="cf-tv">🚌 Ônibus fretado · '+esc(nome(e))+'</span><span class="cf-l">Ônibus fretado da equipe cadastrado no Minha Viagem deste compromisso.</span></div>'; });
     box.innerHTML = h; modal.hidden = false;
     const x = box.querySelector('.cf-x'); if(x) x.focus({preventScroll:true});
   }
