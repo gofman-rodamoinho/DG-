@@ -712,6 +712,15 @@ body:not(.is-staff) [data-act="pdf-dia"]{display:none!important;}
   .cal-ev{width:100%;height:auto;padding:2px 2px 2px 3px;border-radius:2px;font-size:9.5px;letter-spacing:0;background:var(--blue-dim);}
   .cal-ev:hover{background:var(--blue-dim);color:var(--text);}
 }
+/* ===== calendário: dia de show = borda amarelo-clara; nome do show como rótulo ===== */
+:root{ --show-line:#e3c35a; }
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ --show-line:#e2b93b; } }
+:root[data-theme="light"]{ --show-line:#e2b93b; }
+.cal-day{position:relative;}
+.cal-day.show::after{content:"";position:absolute;inset:0;border:2px solid var(--show-line);pointer-events:none;}
+.cal-ev,.cal-ev:hover{background:transparent;border:0;border-radius:0;padding:1px 2px;color:var(--text);}
+.cal-legenda .lg-show{background:transparent;border:2px solid var(--show-line);border-radius:0;width:14px;height:12px;}
+@media (max-width:600px){ .cal-ev,.cal-ev:hover{background:transparent;padding:1px 1px;} }
 </style>
 </head>
 <body>
@@ -4429,18 +4438,23 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   // travel days: datas dos voos já cadastrados no Minha Viagem de cada evento (out/nov/dez = 2026; jan/fev = 2027)
   const TV_FORA = { grammy:['2026-11-19'] }; // pedido do Daniel: volta individual (MCO/GIG) não vira travel day no calendário
   const SEM_VOO = /ONIBUS|SEM EMISS|NAO EMITIR|NÃO EMITIR|GEROU CR/i;
+  // pré-réveillon 27–30/12/2026 com status "NAO HAVERÁ" na planilha (linhas 344–347): fora do calendário a pedido do Daniel (25/10)
+  const CANCELADOS = [344, 345, 346, 347];
+  // travel day (✈): só no dia ANTERIOR a um dia de show real do evento, e só se houver voo de BANDA, BALLET ou CREW nesse dia
+  // (categoria da própria ficha; ARTISTICO não conta). Se o dia anterior também é dia de show (dobra), não marca (caso a decidir).
+  const TV_GRUPOS = ['BANDA','BALLET','CREW'];
+  const menos1 = iso => { const d = new Date(iso+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()-1); return d.toISOString().slice(0,10); };
   function diasVoo(wid){
     const w = window.__mv && window.__mv.WEEKS && window.__mv.WEEKS[wid]; if(!w || !Array.isArray(w.people)) return [];
-    const set = new Set();
-    w.people.forEach(p => (p.legs||[]).forEach(l => {
+    const voos = new Set();
+    w.people.forEach(p => { if(!TV_GRUPOS.includes(String(p.categoria||'').toUpperCase())) return; (p.legs||[]).forEach(l => {
       if(!l || SEM_VOO.test(String(l.status||'')) || l.bus_label) return;
       const m = /^(\d{2})\/(\d{2})/.exec(String(l.data||'').trim()); if(!m) return;
       const mm = +m[2]; if(mm<1 || mm>12) return;
-      const ano = mm >= 10 ? 2026 : 2027;
-      set.add(ano+'-'+m[2]+'-'+m[1]);
-    }));
-    (TV_FORA[wid]||[]).forEach(d=>set.delete(d));
-    return [...set].filter(d => d >= hoje).sort();
+      voos.add((mm >= 10 ? 2026 : 2027)+'-'+m[2]+'-'+m[1]);
+    }); });
+    const diasShowTodos = new Set(Object.values(SHOWS).flat().concat((PLAN||[]).filter(r => r.dataISO && !CANCELADOS.includes(r.linha)).map(r => r.dataISO)));
+    return [...new Set((SHOWS[wid]||[]).map(menos1))].filter(d => voos.has(d) && !diasShowTodos.has(d) && d >= hoje).sort();
   }
   let diaSel = null;
   const body = document.body;
@@ -4450,6 +4464,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     const usados = new Set(), out = [];
     PLAN.forEach(r => {
       if(!r.dataISO || r.dataISO < hoje) return;
+      if(CANCELADOS.includes(r.linha)) return;   // fora do calendário (dados mantidos)
       const ev = base.find(b => (SHOWS[b.id]||[]).includes(r.dataISO));
       if(ev){ usados.add(ev.id); out.push(Object.assign({}, ev, { dias:[r.dataISO], plan:r, encerrado:false })); }
       else out.push({ id:'pl'+r.linha, label:r.evento || '(sem nome na planilha)', sub:'· '+(r.cidade||''), dias:[r.dataISO], plan:r, oculto:true, semPasta:true, encerrado:false, periodo:null });
@@ -4512,7 +4527,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
       const doDia = evs.filter(e=>diasShow(e).includes(dia));
       const viaja = evs.filter(e=>diasVoo(e.id).includes(dia));
       const tem = doDia.length || viaja.length;
-      h += '<div class="cal-day'+(dia===hoje?' hoje':'')+(tem?' tem':'')+(dia===diaSel?' sel':'')+'"'+(tem?' data-dia="'+dia+'" role="button" tabindex="0" aria-label="'+esc(d+' de '+MES[m]+': ver ficha')+'"':'')+'><span class="d">'+d+(viaja.length?' <span class="tv" title="Travel day">✈</span>':'')+'</span>'
+      h += '<div class="cal-day'+(dia===hoje?' hoje':'')+(tem?' tem':'')+(doDia.length?' show':'')+(dia===diaSel?' sel':'')+'"'+(tem?' data-dia="'+dia+'" role="button" tabindex="0" aria-label="'+esc(d+' de '+MES[m]+': ver ficha')+'"':'')+'><span class="d">'+d+(viaja.length?' <span class="tv" title="Travel day">✈</span>':'')+'</span>'
         + doDia.map(e=>'<span class="cal-ev'+(e.encerrado?' enc':'')+(e.plan && passado(e)?' passado':'')+'" title="'+esc(nome(e))+'">'+esc(curto(e))+'</span>').join('')
         + '</div>';
     }
