@@ -721,6 +721,7 @@ body:not(.is-staff) [data-act="pdf-dia"]{display:none!important;}
 .cal-ev,.cal-ev:hover{background:transparent;border:0;border-radius:0;padding:1px 2px;color:var(--text);}
 .cal-legenda .lg-show{background:transparent;border:2px solid var(--show-line);border-radius:0;width:14px;height:12px;}
 @media (max-width:600px){ .cal-ev,.cal-ev:hover{background:transparent;padding:1px 1px;} }
+@media (max-width:600px){ .cal-ev{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;line-height:1.2;overflow-wrap:anywhere;} }
 </style>
 </head>
 <body>
@@ -4479,6 +4480,8 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   // nome curto só para a marcação dentro da célula do calendário (o nome completo fica no title e na ficha)
   const CURTO = { rtm1:'Rock the Mountain', rtm2:'Rock the Mountain', semana1:'Casa Natura', grammy:'Latin Grammy', clipeteto:'Clipe Anitta', carnatal:'Carnatal', eda1:'EDA', eda2:'EDA', eda3:'EDA', eda4:'EDA', meli:'Meli', angelica:'Angélica' };
   function curto(ev){
+    // EDA: "EDA + cidade" do próprio dia, como está na planilha (sem deduzir); sem cidade → só "EDA"
+    if(/^eda\d/.test(ev.id) || /\bEDA\b/.test(String(ev.label||''))){ const c = ev.plan && String(ev.plan.cidade||'').trim(); return c ? 'EDA ' + c : 'EDA'; }
     if(CURTO[ev.id]) return CURTO[ev.id];
     let t = String(ev.label||'').trim();
     if(/rock the mou/i.test(t)) return 'Rock the Mountain';
