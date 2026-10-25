@@ -412,6 +412,11 @@ fieldset.ponto.comum{border-color:var(--blue);background:var(--blue-dim);}
 .geral-card{border-color:var(--blue);}
 .geral-card summary:hover{background:var(--panel-raised);}
 .geral-card summary:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+.geral-card summary{grid-template-columns:auto 1fr auto auto;}
+.geral-card .g-tg{font-family:var(--font-display);font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--blue);border:1px solid var(--blue);border-radius:var(--radius-s);padding:6px 10px;white-space:nowrap;background:var(--blue-dim);}
+.geral-card .g-tg-o{display:none;}
+.geral-card[open] .g-tg-o{display:inline;}
+.geral-card[open] .g-tg-c{display:none;}
 .crono-lock{font-size:12px;line-height:1.5;color:var(--text-dim);background:var(--panel);border:1px dashed var(--hairline);border-radius:var(--radius-m);padding:12px 14px;}
 .crono-lock b{color:var(--text);}
 .folder-tab.encerrado{opacity:.6;border-style:dashed;}
@@ -500,27 +505,75 @@ body.sem-liberados .controls, body.sem-liberados #vivoSlot, body.sem-liberados #
 }
 </style>
 <style>
-/* ===== Agenda de shows (área de consulta, pública) ===== */
-.agenda-shows{background:var(--panel);border:1px solid var(--hairline);border-radius:var(--radius-m);overflow:hidden;}
-.agenda-shows > summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;font-family:var(--font-display);font-size:13.5px;font-weight:500;letter-spacing:.9px;text-transform:uppercase;color:var(--text);}
-.agenda-shows > summary::-webkit-details-marker{display:none;}
-.agenda-shows > summary:hover{background:var(--panel-raised);}
-.agenda-shows > summary:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
-.agenda-shows > summary .ag-n{font-family:var(--font-mono);font-size:11px;font-weight:500;padding:2px 8px;border-radius:99px;background:var(--panel-raised);color:var(--text-dim);letter-spacing:0;text-transform:none;margin-left:8px;}
-.agenda-shows > summary .ag-chev{color:var(--text-faint);font-size:10px;transition:transform .15s;}
-.agenda-shows[open] > summary .ag-chev{transform:rotate(180deg);}
-.agenda-body{border-top:1px solid var(--hairline);padding:12px 16px 14px;display:flex;flex-direction:column;gap:10px;}
-.agenda-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;}
-.agenda-card{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;background:var(--panel-raised);border:1px solid var(--hairline);border-radius:var(--radius-s);padding:10px 12px;}
-.agenda-card .ag-data{display:flex;flex-direction:column;align-items:center;min-width:44px;padding-right:12px;border-right:1px solid var(--hairline);}
-.agenda-card .ag-data b{font-family:var(--font-display);font-size:22px;font-weight:600;line-height:1;color:var(--text);font-variant-numeric:tabular-nums;}
-.agenda-card .ag-data span{font-family:var(--font-display);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);margin-top:3px;}
-.agenda-card .ag-info{min-width:0;display:flex;flex-direction:column;gap:2px;}
-.agenda-card .ag-quando{font-size:10.5px;color:var(--text-faint);}
-.agenda-card .ag-nome{font-family:var(--font-display);font-size:14px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--text);}
-.agenda-card .ag-cidade{font-size:11.5px;color:var(--text-dim);}
-.agenda-card .ag-selo{align-self:flex-start;margin-top:4px;font-family:var(--font-display);font-size:9.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:2px 9px;border-radius:99px;background:var(--green-dim);color:var(--green);}
-.agenda-vazio{font-size:11.5px;line-height:1.5;color:var(--text-faint);}
+/* ===== Agenda de shows (calendário de entrada) ===== */
+#folderTabs{display:none!important;}
+body.agenda-mode .wrap > *:not(#agendaCal){display:none!important;}
+body:not(.agenda-mode) #agendaCal{display:none!important;}
+body.agenda-mode #mvBack{display:none!important;}
+#mvBack{align-self:flex-start;background:transparent;color:var(--text);border:1px solid var(--hairline);border-radius:var(--radius-s);padding:8px 14px;font-family:var(--font-display);font-size:12px;letter-spacing:.8px;text-transform:uppercase;cursor:pointer;}
+#mvBack:hover{border-color:var(--blue);color:var(--blue);}
+#mvBack:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+.cal{display:flex;flex-direction:column;gap:14px;}
+.cal-top h1{margin-top:4px;}
+.cal-box{background:var(--panel);border:1px solid var(--hairline);border-radius:var(--radius-m);overflow:hidden;}
+.cal-nav{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;border-bottom:1px solid var(--hairline);}
+.cal-nav b{text-align:center;font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:1px;text-transform:uppercase;}
+.cal-nav button{height:44px;background:transparent;border:0;color:var(--text-dim);font-size:18px;cursor:pointer;}
+.cal-nav button:hover{color:var(--blue);} .cal-nav button:disabled{opacity:.25;cursor:default;}
+.cal-nav button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));}
+.cal-dow{padding:8px 0 6px;text-align:center;font-family:var(--font-display);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);}
+.cal-day{min-height:62px;border-top:1px solid var(--hairline);border-left:1px solid var(--hairline);padding:4px;display:flex;flex-direction:column;gap:3px;min-width:0;}
+.cal-day:nth-child(7n+1){border-left:0;}
+.cal-day .d{font-size:11px;color:var(--text-dim);font-variant-numeric:tabular-nums;}
+.cal-day.fora .d{opacity:.3;}
+.cal-day.hoje .d{color:var(--green);font-weight:700;}
+.cal-ev{display:block;width:100%;text-align:left;border:0;border-radius:3px;padding:3px 5px;background:var(--blue-dim);color:var(--text);font-family:var(--font-display);font-size:10.5px;letter-spacing:.3px;line-height:1.25;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cal-ev:hover{background:var(--blue);color:#0b1020;}
+.cal-ev:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+.cal-lista{display:flex;flex-direction:column;gap:8px;}
+.cal-item{display:grid;grid-template-columns:58px 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;background:var(--panel);border:1px solid var(--hairline);border-radius:var(--radius-m);padding:12px 14px;color:var(--text);font:inherit;cursor:pointer;}
+.cal-item:hover{border-color:var(--blue);background:var(--blue-dim);}
+.cal-item:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+.cal-item .ci-data{display:flex;flex-direction:column;align-items:center;border-right:1px solid var(--hairline);padding-right:10px;}
+.cal-item .ci-data b{font-family:var(--font-display);font-size:22px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums;}
+.cal-item .ci-data span{font-family:var(--font-display);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);margin-top:3px;}
+.cal-item .ci-info{min-width:0;display:flex;flex-direction:column;gap:2px;}
+.cal-item .ci-nome{font-family:var(--font-display);font-size:14.5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;}
+.cal-item .ci-sub{font-size:11.5px;color:var(--text-dim);}
+.cal-item .ci-go{color:var(--text-faint);font-size:16px;}
+.cal-vazio{padding:22px 16px;text-align:center;color:var(--text-faint);font-size:12px;background:var(--panel);border:1px dashed var(--hairline);border-radius:var(--radius-m);}
+.cal-ev.enc{opacity:.6;}
+.cal-item.enc{opacity:.6;border-style:dashed;}
+.cal-item .ci-nome .enc{font-family:var(--font-mono);font-size:9.5px;font-weight:400;letter-spacing:.4px;text-transform:uppercase;margin-left:8px;color:var(--text-faint);}
+.cal-day.tem{cursor:pointer;}
+.cal-day.tem:hover{background:var(--panel-raised);}
+.cal-day.sel{box-shadow:inset 0 0 0 2px var(--blue);}
+.cal-day:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+.cal-day .tv{font-size:11px;line-height:1;color:var(--amber);}
+.cal-ev{cursor:pointer;}
+.cal-modal[hidden]{display:none!important;}
+.cal-modal{position:fixed;inset:0;z-index:80;background:rgba(6,9,16,.62);display:flex;align-items:center;justify-content:center;padding:16px;}
+.cal-modal .cal-ficha{width:100%;max-width:440px;max-height:calc(100vh - 32px);overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.45);}
+.cal-ficha{background:var(--panel);border:1px solid var(--blue);border-radius:var(--radius-m);padding:12px 14px;display:flex;flex-direction:column;gap:10px;}
+.cal-ficha .cf-h{display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:var(--font-display);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--text);}
+.cal-ficha .cf-x{background:transparent;border:1px solid var(--hairline);color:var(--text-dim);border-radius:var(--radius-s);width:32px;height:32px;cursor:pointer;font-size:15px;}
+.cal-ficha .cf-ev{border-top:1px solid var(--hairline);padding-top:10px;display:flex;flex-direction:column;gap:3px;}
+.cal-ficha .cf-ev:first-of-type{border-top:0;padding-top:0;}
+.cal-ficha .cf-nome{font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;}
+.cal-ficha .cf-l{font-size:11.5px;color:var(--text-dim);}
+.cal-ficha .cf-l b{color:var(--text-faint);font-weight:500;font-family:var(--font-display);font-size:10px;letter-spacing:.8px;text-transform:uppercase;margin-right:6px;}
+.cal-ficha .cf-tv{font-size:11.5px;color:var(--amber);}
+.cal-legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:var(--text-faint);padding:8px 12px;border-top:1px solid var(--hairline);}
+.cal-legenda i{font-style:normal;color:var(--amber);}
+.cal-legenda .lg-show{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--blue-dim);border:1px solid var(--blue);vertical-align:-1px;margin-right:4px;}
+@media (max-width:600px){ .cal-ev{pointer-events:none;} }
+.cal-lista-t{font-family:var(--font-display);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-faint);}
+@media (max-width:600px){
+  .cal-day{min-height:44px;padding:3px 2px;align-items:center;}
+  .cal-ev{width:8px;height:8px;padding:0;border-radius:50%;background:var(--blue);font-size:0;}
+  .cal-ev:hover{background:var(--amber);}
+}
 </style>
 </head>
 <body>
@@ -573,6 +626,24 @@ body.sem-liberados .controls, body.sem-liberados #vivoSlot, body.sem-liberados #
 
 <div class="wrap">
 
+  <button type="button" id="mvBack">← Voltar para a agenda</button>
+
+  <section class="cal" id="agendaCal" aria-label="Agenda de shows">
+    <div class="cal-top">
+      <div class="eyebrow">Anitta · Rodamoinho</div>
+      <h1>Agenda de shows</h1>
+      <div class="muted">Toque num compromisso para abrir a viagem e o cronograma.</div>
+    </div>
+    <div class="cal-box">
+      <div class="cal-nav"><button type="button" id="calPrev" aria-label="Mês anterior">‹</button><b id="calMes"></b><button type="button" id="calNext" aria-label="Próximo mês">›</button></div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legenda"><span><span class="lg-show"></span>Dia de show</span><span><i>✈</i> Travel day (voo da equipe)</span><span>Toque na data para ver a ficha</span></div>
+    </div>
+    <div class="cal-modal" id="calModal" hidden><div class="cal-ficha" id="calFicha" role="dialog" aria-modal="true" aria-label="Ficha do dia"></div></div>
+    <div class="cal-lista-t" id="calListaT"></div>
+    <div class="cal-lista" id="calLista"></div>
+  </section>
+
   <header class="top">
     <div>
       <div class="eyebrow">Anitta · Rodamoinho</div>
@@ -591,18 +662,6 @@ body.sem-liberados .controls, body.sem-liberados #vivoSlot, body.sem-liberados #
   </header>
 
   <nav class="tabs" id="folderTabs"></nav>
-
-  <details class="agenda-shows" id="agendaShows">
-    <summary><span>🗓 Agenda de shows<span class="ag-n">3</span></span><span class="ag-chev" aria-hidden="true">▾</span></summary>
-    <div class="agenda-body">
-      <div class="agenda-grid">
-        <div class="agenda-card"><div class="ag-data"><b>31</b><span>out</span></div><div class="ag-info"><span class="ag-quando">31/10/2026 · sáb</span><span class="ag-nome">Rock the Mountain · 1º FDS</span><span class="ag-cidade">Petrópolis (RJ)</span></div></div>
-        <div class="agenda-card"><div class="ag-data"><b>07</b><span>nov</span></div><div class="ag-info"><span class="ag-quando">07/11/2026 · sáb</span><span class="ag-nome">Rock the Mountain · 2º FDS</span><span class="ag-cidade">Petrópolis (RJ)</span></div></div>
-        <div class="agenda-card"><div class="ag-data"><b>09</b><span>nov</span></div><div class="ag-info"><span class="ag-quando">09/11/2026 · seg</span><span class="ag-nome">Casa Natura</span><span class="ag-cidade">São Paulo</span></div></div>
-      </div>
-      <p class="agenda-vazio">Esta área vai reunir a agenda completa de shows. Por enquanto mostra só os compromissos já liberados neste painel. Novos shows entram quando o Daniel liberar cada registro, com o status definido por ele (Confirmado, TBC ou Cancelado).</p>
-    </div>
-  </details>
 
   <div class="viewswitch" id="viewSwitch" role="group" aria-label="Escolher seção">
     <button type="button" id="vsViagem" aria-pressed="true"><span class="ic">✈︎</span>Minha viagem</button>
@@ -2492,6 +2551,8 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   }
 
   window.__mv = { WEEKS, WEEK_ORDER, render, simplifyStatus, baixarDiaPdf, gerarDiaPdfBytes };
+  window.__mvAgenda = { lista: () => WEEK_ORDER.filter(visivel).map(wid => ({ id:wid, label:WEEKS[wid].label, sub:WEEKS[wid].sub, periodo:PERIODOS[wid]||null, oculto: !!(isStaff() && LIBERADOS && LIBERADOS[wid] !== true), encerrado: encerrado(wid) })),
+    abrir: wid => { state.view = wid; state.team='ALL'; state.status='ALL'; state.q=''; state.openPerson=null; const si = document.getElementById('searchInput'); if(si) si.value=''; batchSelected.clear(); batchOpen = false; render(); } };
 })();
 
 </script>
@@ -2666,7 +2727,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     hA.forEach(x=>{ body += linha('🏨 Hotel A'+(x.pendente?' · a confirmar':''), x); });
     if(!body) body = '<div class="cfg-line"><span class="cfg-k"></span><span class="cfg-v">Período, venue e showtime ainda não preenchidos.</span></div>';
     body += '<div class="cfg-line"><span class="cfg-k"></span><span class="cfg-v"><button type="button" class="btn" data-act="geral">✎ '+(tem?'Editar':'Preencher')+' dados gerais</button></span></div>';
-    return '<details class="panel cfg-info geral-card"'+((geralAberto || !tem)?' open':'')+'><summary><span class="g-ic" aria-hidden="true">📋</span><span class="g-t"><b>Dados gerais do compromisso</b><small>'+esc(resumo)+' · vale para B e A</small></span><span class="g-chev" aria-hidden="true">▾</span></summary><div class="cfg-body">'+body+'</div></details>';
+    return '<details class="panel cfg-info geral-card"'+((geralAberto || !tem)?' open':'')+'><summary><span class="g-ic" aria-hidden="true">📋</span><span class="g-t"><b>Dados gerais do compromisso</b><small>'+esc(resumo)+' · vale para B e A</small></span><span class="g-tg"><span class="g-tg-o">Recolher</span><span class="g-tg-c">Expandir</span></span><span class="g-chev" aria-hidden="true">▾</span></summary><div class="cfg-body">'+body+'</div></details>';
   }
   function datasEntre(a, b){
     const out = []; const d = new Date(a+'T12:00:00'), f = new Date(b+'T12:00:00');
@@ -4163,6 +4224,153 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   if (btnEl) btnEl.addEventListener('click', atualizarAoVivo);
   function mostraBotaoEda(){ const on = /^eda\d$/.test(window.__mvWeek||''); const ln = document.getElementById('edaLine'); if(btnEl) btnEl.style.display = on ? '' : 'none'; if(ln) ln.style.display = on ? '' : 'none'; }
   window.addEventListener('mv-week', mostraBotaoEda); mostraBotaoEda();
+})();
+</script>
+<script>
+(function(){
+  /* ===== Agenda de shows: tela de entrada em calendário. Mostra só os compromissos que o visitante já pode ver (mesma regra das abas). ===== */
+  const MES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const MESC = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const DOW = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const hoje = (()=>{ try{ return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo'}).format(new Date()); }catch(e){ return new Date().toISOString().slice(0,10); } })();
+  const pad = n => String(n).padStart(2,'0');
+  const iso = (y,m,d) => y+'-'+pad(m+1)+'-'+pad(d);
+  let mesAtual = null; // [ano, mes0]
+  // dias de SHOW de cada compromisso (só estes entram no calendário; datas de viagem ficam no Minha Viagem do evento)
+  const SHOWS = { semana1:['2026-11-09'], rtm1:['2026-10-31'], rtm2:['2026-11-07'], grammy:['2026-11-12'], clipeteto:['2026-11-30'], carnatal:['2026-12-04'],
+    meli:['2026-10-17'], angelica:['2026-10-15'], eda1:['2027-01-09','2027-01-10'], eda2:['2027-01-16','2027-01-17'], eda3:['2027-01-23','2027-01-24'], eda4:['2027-01-30','2027-01-31'] };
+  const diasShow = ev => SHOWS[ev.id] || (ev.periodo ? [ev.periodo[0]] : []);
+  // ficha do evento (planilha "Anitta @ Scheduled Shows 2026/2027"): só compromissos liberados para a equipe
+  const FICHA = {
+    rtm1: { status:'Confirmado', equipe:'Equipe completa', formato:'Show normal (banda 12 + ballet + equipe técnica)' },
+    rtm2: { status:'Confirmado', equipe:'Equipe completa', formato:'Show normal (banda 12 + ballet + equipe técnica)' },
+    semana1: { status:'Confirmado', equipe:'Equipe completa', formato:'Pocket show (banda 5 + ballet TBC + equipe técnica TBC)' },
+    grammy: { status:'TBC', equipe:'Equipe performance', formato:'Equipe técnica reduzida + ballet TBC' }
+  };
+  // travel days: datas dos voos já cadastrados no Minha Viagem de cada evento (out/nov/dez = 2026; jan/fev = 2027)
+  const TV_FORA = { grammy:['2026-11-19'] }; // pedido do Daniel: volta individual (MCO/GIG) não vira travel day no calendário
+  const SEM_VOO = /ONIBUS|SEM EMISS|NAO EMITIR|NÃO EMITIR|GEROU CR/i;
+  function diasVoo(wid){
+    const w = window.__mv && window.__mv.WEEKS && window.__mv.WEEKS[wid]; if(!w || !Array.isArray(w.people)) return [];
+    const set = new Set();
+    w.people.forEach(p => (p.legs||[]).forEach(l => {
+      if(!l || SEM_VOO.test(String(l.status||'')) || l.bus_label) return;
+      const m = /^(\d{2})\/(\d{2})/.exec(String(l.data||'').trim()); if(!m) return;
+      const mm = +m[2]; if(mm<1 || mm>12) return;
+      const ano = mm >= 10 ? 2026 : 2027;
+      set.add(ano+'-'+m[2]+'-'+m[1]);
+    }));
+    (TV_FORA[wid]||[]).forEach(d=>set.delete(d));
+    return [...set].sort();
+  }
+  let diaSel = null;
+  const body = document.body;
+  function lista(){ try{ return (window.__mvAgenda && window.__mvAgenda.lista()) || []; }catch(e){ return []; } }
+  function cidade(ev){ const p = String(ev.sub||'').split('·'); return (p.length>1 ? p.slice(1).join('·') : '').trim(); }
+  function quando(ev){ const ds = diasShow(ev); if(!ds.length){ const p = String(ev.sub||'').split('·'); return (p[0]||'').trim(); }
+    const dm = ds.map(d=>d.slice(8,10)+'/'+d.slice(5,7)); return (dm.length>1 ? dm.slice(0,-1).join(', ')+' e '+dm[dm.length-1] : dm[0]) + '/' + ds[ds.length-1].slice(0,4); }
+  function nome(ev){ return (ev.oculto ? '🔒 ' : '') + ev.label; }
+  function mesInicial(evs){
+    const com = evs.filter(e=>diasShow(e).length);
+    const ult = e => diasShow(e).slice(-1)[0], pri = e => diasShow(e)[0];
+    const prox = com.filter(e=>ult(e) >= hoje).sort((a,b)=>pri(a)<pri(b)?-1:1)[0] || com.sort((a,b)=>pri(a)<pri(b)?1:-1)[0];
+    const base = prox ? pri(prox) : hoje;
+    return [ +base.slice(0,4), +base.slice(5,7)-1 ];
+  }
+  function limites(evs){
+    const ds = evs.flatMap(e=>diasShow(e).concat(diasVoo(e.id))).sort();
+    if(!ds.length) return null;
+    return [ds[0].slice(0,7), ds[ds.length-1].slice(0,7)];
+  }
+  function abrir(wid){
+    if(!(window.__mvAgenda)) return;
+    window.__mvAgenda.abrir(wid);
+    body.classList.remove('agenda-mode');
+    window.scrollTo(0,0);
+    const b = document.getElementById('mvBack'); if(b) b.focus({preventScroll:true});
+  }
+  function voltar(){ body.classList.add('agenda-mode'); render(); window.scrollTo(0,0); }
+  function render(){
+    const evs = lista();
+    if(!mesAtual) mesAtual = mesInicial(evs);
+    const [y,m] = mesAtual;
+    document.getElementById('calMes').textContent = MES[m] + ' ' + y;
+    const lim = limites(evs), chave = y+'-'+pad(m+1);
+    document.getElementById('calPrev').disabled = !lim || chave <= lim[0];
+    document.getElementById('calNext').disabled = !lim || chave >= lim[1];
+    // grade
+    let h = DOW.map(d=>'<div class="cal-dow">'+d+'</div>').join('');
+    const primeiro = new Date(y, m, 1).getDay(), dias = new Date(y, m+1, 0).getDate();
+    const total = Math.ceil((primeiro + dias)/7)*7;
+    for(let i=0;i<total;i++){
+      const d = i - primeiro + 1, dentro = d>=1 && d<=dias;
+      if(!dentro){ h += '<div class="cal-day fora"></div>'; continue; }
+      const dia = iso(y,m,d);
+      const doDia = evs.filter(e=>diasShow(e).includes(dia));
+      const viaja = evs.filter(e=>diasVoo(e.id).includes(dia));
+      const tem = doDia.length || viaja.length;
+      h += '<div class="cal-day'+(dia===hoje?' hoje':'')+(tem?' tem':'')+(dia===diaSel?' sel':'')+'"'+(tem?' data-dia="'+dia+'" role="button" tabindex="0" aria-label="'+esc(d+' de '+MES[m]+': ver ficha')+'"':'')+'><span class="d">'+d+(viaja.length?' <span class="tv" title="Travel day">✈</span>':'')+'</span>'
+        + doDia.map(e=>'<span class="cal-ev'+(e.encerrado?' enc':'')+'" title="'+esc(nome(e))+'">'+esc(nome(e))+'</span>').join('')
+        + '</div>';
+    }
+    document.getElementById('calGrid').innerHTML = h;
+    renderFicha(evs);
+    // lista do mês
+    const ini = iso(y,m,1), fim = iso(y,m,dias);
+    const doMes = evs.filter(e=>diasShow(e).some(d=>d>=ini && d<=fim)).sort((a,b)=>diasShow(a)[0]<diasShow(b)[0]?-1:diasShow(a)[0]>diasShow(b)[0]?1:0);
+    const semData = evs.filter(e=>!diasShow(e).length);
+    const itens = doMes.concat(semData);
+    document.getElementById('calListaT').textContent = itens.length ? 'Compromissos de ' + MES[m] : '';
+    document.getElementById('calLista').innerHTML = !evs.length
+      ? '<div class="cal-vazio">Nenhum compromisso liberado ainda.</div>'
+      : (itens.length ? itens.map(e=>{
+          const p0 = diasShow(e).find(d=>d>=ini && d<=fim) || diasShow(e)[0] || '';
+          return '<button type="button" class="cal-item'+(e.encerrado?' enc':'')+'" data-wid="'+esc(e.id)+'"><span class="ci-data"><b>'+(p0?p0.slice(8,10):'—')+'</b><span>'+(p0?MESC[+p0.slice(5,7)-1]:'')+'</span></span>'
+            + '<span class="ci-info"><span class="ci-nome">'+esc(nome(e))+(e.encerrado?'<span class="enc">Encerrado</span>':'')+'</span><span class="ci-sub">'+esc(quando(e))+(cidade(e)?' · '+esc(cidade(e)):'')+'</span></span><span class="ci-go" aria-hidden="true">›</span></button>';
+        }).join('') : '<div class="cal-vazio">Nenhum compromisso neste mês.</div>');
+  }
+  function renderFicha(evs){
+    const box = document.getElementById('calFicha'), modal = document.getElementById('calModal');
+    if(!diaSel){ modal.hidden = true; box.innerHTML = ''; return; }
+    const doDia = evs.filter(e=>diasShow(e).includes(diaSel));
+    const viaja = evs.filter(e=>diasVoo(e.id).includes(diaSel));
+    if(!doDia.length && !viaja.length){ modal.hidden = true; box.innerHTML = ''; return; }
+    const dt = diaSel.slice(8,10)+'/'+diaSel.slice(5,7)+'/'+diaSel.slice(0,4);
+    let h = '<div class="cf-h"><span>'+dt+'</span><button type="button" class="cf-x" data-fechar="1" aria-label="Fechar ficha">✕</button></div>';
+    doDia.forEach(e=>{
+      const f = !e.oculto && FICHA[e.id];
+      h += '<div class="cf-ev"><span class="cf-nome">'+esc(nome(e))+(e.encerrado?' <span class="enc" style="font-family:var(--font-mono);font-size:9.5px;font-weight:400;color:var(--text-faint)">Encerrado</span>':'')+'</span>'
+        + '<span class="cf-l"><b>Data</b>'+esc(quando(e))+'</span>'
+        + (cidade(e)?'<span class="cf-l"><b>Cidade</b>'+esc(cidade(e))+'</span>':'')
+        + (f ? '<span class="cf-l"><b>Status</b>'+esc(f.status)+'</span><span class="cf-l"><b>Equipe</b>'+esc(f.equipe)+'</span><span class="cf-l"><b>Formato</b>'+esc(f.formato)+'</span>' : '')
+        + '</div>';
+    });
+    viaja.forEach(e=>{ h += '<div class="cf-ev"><span class="cf-tv">✈ Travel day · '+esc(nome(e))+'</span><span class="cf-l">Voo da equipe cadastrado no Minha Viagem deste compromisso.</span></div>'; });
+    box.innerHTML = h; modal.hidden = false;
+    const x = box.querySelector('.cf-x'); if(x) x.focus({preventScroll:true});
+  }
+  function escolherDia(dia){ diaSel = (diaSel===dia) ? null : dia; render(); }
+  document.getElementById('agendaCal').addEventListener('click', ev=>{
+    if(ev.target.closest('[data-fechar]') || ev.target.id === 'calModal'){ diaSel = null; render(); return; }
+    const card = ev.target.closest('.cal-item[data-wid]'); if(card){ abrir(card.dataset.wid); return; }
+    const dia = ev.target.closest('.cal-day[data-dia]'); if(dia){ escolherDia(dia.dataset.dia); return; }
+  });
+  document.getElementById('agendaCal').addEventListener('keydown', ev=>{
+    if(ev.key==='Escape' && diaSel){ diaSel = null; render(); return; }
+    if(ev.key!=='Enter' && ev.key!==' ') return;
+    const dia = ev.target.closest && ev.target.closest('.cal-day[data-dia]'); if(dia){ ev.preventDefault(); escolherDia(dia.dataset.dia); }
+  });
+  document.getElementById('calPrev').onclick = ()=>{ let [y,m] = mesAtual; m--; if(m<0){ m=11; y--; } mesAtual=[y,m]; diaSel=null; render(); };
+  document.getElementById('calNext').onclick = ()=>{ let [y,m] = mesAtual; m++; if(m>11){ m=0; y++; } mesAtual=[y,m]; diaSel=null; render(); };
+  document.getElementById('mvBack').onclick = voltar;
+  body.classList.add('agenda-mode');
+  // a regra de visibilidade carrega depois (banco); a lista de abas é refeita a cada mudança, e a agenda acompanha
+  const tabs = document.getElementById('folderTabs');
+  let ultimo = '';
+  const sync = ()=>{ const k = JSON.stringify(lista()); if(k!==ultimo){ const vazio = !ultimo || ultimo==='[]'; ultimo = k; if(vazio) mesAtual = null; render(); } };
+  if(tabs) new MutationObserver(sync).observe(tabs, {childList:true, subtree:true});
+  sync();
 })();
 </script>
 </body>
