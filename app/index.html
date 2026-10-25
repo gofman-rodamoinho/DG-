@@ -4439,10 +4439,12 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   // travel days: datas dos voos já cadastrados no Minha Viagem de cada evento (out/nov/dez = 2026; jan/fev = 2027)
   const TV_FORA = { grammy:['2026-11-19'] }; // pedido do Daniel: volta individual (MCO/GIG) não vira travel day no calendário
   const SEM_VOO = /ONIBUS|SEM EMISS|NAO EMITIR|NÃO EMITIR|GEROU CR/i;
-  // pré-réveillon 27–30/12/2026 com status "NAO HAVERÁ" na planilha (linhas 344–347): fora do calendário a pedido do Daniel (25/10)
-  const CANCELADOS = [344, 345, 346, 347];
+  // pré-réveillon 27–30/12/2026 (linhas 344–347) e Réveillon 31/12/2026 (linha 348), status "NAO HAVERÁ": fora do calendário a pedido do Daniel (25/10)
+  const CANCELADOS = [344, 345, 346, 347, 348];
   // travel day (✈): só no dia ANTERIOR a um dia de show real do evento, e só se houver voo de BANDA, BALLET ou CREW nesse dia
-  // (categoria da própria ficha; ARTISTICO não conta). Se o dia anterior também é dia de show (dobra), não marca (caso a decidir).
+  // (categoria da própria ficha; ARTISTICO e DJ não contam). Pode coexistir com a borda de show (Daniel, 25/10).
+  // Caso incerto, sem avião até decisão: 30/01/2027 — os voos do dia levam a equipe ao show do MESMO dia (Curitiba), não ao de 31/01.
+  const TV_INCERTO = { eda4:['2027-01-30'] };
   const TV_GRUPOS = ['BANDA','BALLET','CREW'];
   const menos1 = iso => { const d = new Date(iso+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()-1); return d.toISOString().slice(0,10); };
   function diasVoo(wid){
@@ -4454,8 +4456,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
       const mm = +m[2]; if(mm<1 || mm>12) return;
       voos.add((mm >= 10 ? 2026 : 2027)+'-'+m[2]+'-'+m[1]);
     }); });
-    const diasShowTodos = new Set(Object.values(SHOWS).flat().concat((PLAN||[]).filter(r => r.dataISO && !CANCELADOS.includes(r.linha)).map(r => r.dataISO)));
-    return [...new Set((SHOWS[wid]||[]).map(menos1))].filter(d => voos.has(d) && !diasShowTodos.has(d) && d >= hoje).sort();
+    return [...new Set((SHOWS[wid]||[]).map(menos1))].filter(d => voos.has(d) && !(TV_INCERTO[wid]||[]).includes(d) && d >= hoje).sort();
   }
   let diaSel = null;
   const body = document.body;
