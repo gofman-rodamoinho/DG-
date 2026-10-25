@@ -1,6 +1,6 @@
 {
   "name": "Minha Viagem Rodamoinho",
-  "short_name": "Minha Viagem",
+  "short_name": "MV",
   "description": "Voos, hotel, cronograma e logística da equipe Rodamoinho em todos os compromissos.",
   "start_url": "./",
   "scope": "./",
