@@ -6,14 +6,16 @@ Uso: python3 tools/sincronizar_cronograma.py <pasta_com_cronograma/*.json> app/i
 
 Regras (fixas, para nunca vazar nada):
 - Só atualiza documentos que JÁ existem na cópia do app (lista abaixo é conferida contra ela).
-- Nunca copia: e-mails da equipe, pastas privadas, ajustes da ficha, documentos internos,
+- Nunca copia: e-mails da equipe, pastas privadas, ajustes da agenda (só os da ficha da viagem), documentos internos,
   agenda da planilha, nada do clipe.
 - No controle de visibilidade, só mantém as pastas que o app conhece.
 - Não mexe em nenhum outro trecho do arquivo. Sem mudança real => não grava nada.
 """
 import json, re, sys, os, datetime
 
-NUNCA = re.compile(r'(equipe-emails|pastas-privadas|ficha-overrides|-docs$|agenda-planilha|clipe)')
+NUNCA = re.compile(r'(equipe-emails|pastas-privadas|-docs$|agenda-planilha|clipe)')
+# ficha-overrides: só a parte "viagem" (ajustes de hotel/aviso feitos pelo dono), e só das pastas que o app conhece.
+# Os ajustes da agenda ("shows") nunca vão para o app.
 
 def carregar(pasta):
     docs = {}
@@ -43,6 +45,9 @@ def main():
         if NUNCA.search(k) or k not in db:
             continue
         novo = json.loads(json.dumps(db[k]))
+        if k == 'cronograma/ficha-overrides':
+            v = novo.get('viagem') if isinstance(novo.get('viagem'), dict) else {}
+            novo = {'atualizadoEm': novo.get('atualizadoEm', ''), 'viagem': {w: x for w, x in v.items() if w in wids}}
         if k == 'cronograma/visibilidade' and isinstance(novo.get('liberados'), dict):
             novo['liberados'] = {w: v for w, v in novo['liberados'].items() if w in wids}
         if sem_data(novo) != sem_data(snap[k]):
