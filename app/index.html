@@ -4658,9 +4658,7 @@ body.has-install-bar #mvTopo{bottom:calc(150px + env(safe-area-inset-bottom,0px)
 (function(){
   const b = document.getElementById('mvTopo'); if(!b) return;
   function atualizar(){
-    const doc = document.documentElement, fim = window.innerHeight + window.scrollY >= doc.scrollHeight - 160;
-    const longo = doc.scrollHeight > window.innerHeight * 1.3;
-    b.classList.toggle('on', longo && fim && window.scrollY > 200);
+    b.classList.toggle('on', window.scrollY > 80);   // aparece assim que começa a rolar; some ao voltar ao topo
     const outro = [...document.querySelectorAll('a[target="_blank"]')].some(a => a.style.position === 'fixed' && getComputedStyle(a).display !== 'none');
     b.classList.toggle('acima', outro);   // não cobre o botão "Editar no Claude" do app
     const barra = document.getElementById('installBar');
