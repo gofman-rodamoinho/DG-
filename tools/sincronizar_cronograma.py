@@ -14,7 +14,8 @@ Regras (fixas, para nunca vazar nada):
 import json, re, sys, os, datetime
 
 NUNCA = re.compile(r'(equipe-emails|pastas-privadas|-docs$|agenda-planilha|clipe)')
-# ficha-overrides: só a parte "viagem" (ajustes de hotel/aviso feitos pelo dono), e só das pastas que o app conhece.
+# ficha-overrides: só a parte "viagem" (ajustes de hotel/aviso feitos pelo dono, só das pastas que o app conhece)
+# e "novos" (eventos que o dono adiciona direto no calendário).
 # Os ajustes da agenda ("shows") nunca vão para o app.
 
 def carregar(pasta):
@@ -47,7 +48,8 @@ def main():
         novo = json.loads(json.dumps(db[k]))
         if k == 'cronograma/ficha-overrides':
             v = novo.get('viagem') if isinstance(novo.get('viagem'), dict) else {}
-            novo = {'atualizadoEm': novo.get('atualizadoEm', ''), 'viagem': {w: x for w, x in v.items() if w in wids}}
+            nv = novo.get('novos') if isinstance(novo.get('novos'), dict) else {}
+            novo = {'atualizadoEm': novo.get('atualizadoEm', ''), 'viagem': {w: x for w, x in v.items() if w in wids}, 'novos': nv}
         if k == 'cronograma/visibilidade' and isinstance(novo.get('liberados'), dict):
             novo['liberados'] = {w: v for w, v in novo['liberados'].items() if w in wids}
         if sem_data(novo) != sem_data(snap[k]):
