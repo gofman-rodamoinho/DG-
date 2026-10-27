@@ -50,7 +50,11 @@ def main():
             v = novo.get('viagem') if isinstance(novo.get('viagem'), dict) else {}
             nv = novo.get('novos') if isinstance(novo.get('novos'), dict) else {}
             co = novo.get('cardOculto') if isinstance(novo.get('cardOculto'), dict) else {}
+            ce = novo.get('calEquipe') if isinstance(novo.get('calEquipe'), dict) else {}
             novo = {'atualizadoEm': novo.get('atualizadoEm', ''), 'viagem': {w: x for w, x in v.items() if w in wids}, 'novos': nv}
+            ce = {k2: {'equipe': x['equipe'], 'em': x.get('em', '')} for k2, x in ce.items() if 'clipe' not in k2.lower() and isinstance(x, dict) and isinstance(x.get('equipe'), bool)}
+            if ce:  # cadeado do calendário escolhido pelo dono (só exibição); clipe nunca vai ao app
+                novo['calEquipe'] = ce
             if co:  # cards ocultos só da lista "Compromissos" (o evento segue no calendário): só a chave e a data do ajuste
                 novo['cardOculto'] = {k2: {'em': (x or {}).get('em', '') if isinstance(x, dict) else ''} for k2, x in co.items()}
         if k == 'cronograma/visibilidade' and isinstance(novo.get('liberados'), dict):

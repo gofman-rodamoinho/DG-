@@ -4629,6 +4629,18 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
 
   // ===== eventos adicionados pelo dono direto no calendário (cronograma/ficha-overrides → "novos"; todos leem, só o dono grava) =====
   let NOVOS = {};
+  // cadeado do calendário por evento, escolhido pelo dono (Daniel, 27/10): cronograma/ficha-overrides → "calEquipe": {chave: {equipe:true|false, em}}.
+  // Só a EXIBIÇÃO no calendário/ficha da equipe (não libera pasta, Minha Viagem nem cronograma; não é segurança). Sem entrada = regra atual. Clipe nunca.
+  let CAL_EQ = {};
+  const clipeRestrito = e => /clipe/i.test(String((e && e.id) || ''));
+  function aplicarCalEquipe(list){
+    return list.map(e => {
+      const n = Object.assign({}, e, { padraoEquipe: !e.oculto || e.publico === true });
+      const o = CAL_EQ && CAL_EQ[chaveCard(e)];
+      if(!o || typeof o.equipe !== 'boolean' || clipeRestrito(e)) return n;
+      return Object.assign(n, o.equipe ? { oculto:false, publico:true, calEq:true } : { oculto:true, publico:false, calEq:false });
+    });
+  }
   // cards ocultos só da lista "Compromissos do mês" (o evento continua no calendário e na ficha); ajuste do dono no artefato
   let CARD_OFF = {};
   const chaveCard = e => e.plan && e.plan.linha != null ? 'l' + e.plan.linha : 'w' + e.id;
@@ -4663,7 +4675,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   // nem pasta bloqueada, nem registro da planilha sem pasta, nem evento manual — só o que foi liberado e as exceções publico:true.
   // No app público ninguém é dono/editor: a falta de login nunca libera nada.
   const soLiberados = (list, staff) => staff ? list : list.filter(e => !e.oculto || e.publico === true);
-  function lista(){ const a0 = window.__mvAgenda; return soLiberados(listaTudo(), !!(a0 && a0.staff && a0.staff())); }
+  function lista(){ const a0 = window.__mvAgenda; return soLiberados(aplicarCalEquipe(listaTudo()), !!(a0 && a0.staff && a0.staff())); }
   function listaTudo(){ try{
     TV_CACHE = {};
     const a = window.__mvAgenda; const base = ((a && a.lista()) || []).filter(e => { const ds = diasShow(e); return !ds.length || ds[ds.length-1] >= hoje; });   // calendário só de hoje pra frente
@@ -4826,7 +4838,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   const tabs = document.getElementById('folderTabs');
   let ultimo = '';
   (async () => { try{ if(!(window.claude && window.claude.use)) return; const db = await window.claude.use('db'); if(!db) return;
-    db.doc('cronograma/ficha-overrides').onSnapshot(sn => { const d = sn && sn.exists ? sn.data() : null; if(!d) return; NOVOS = (d.novos && typeof d.novos === 'object') ? d.novos : {}; CARD_OFF = (d.cardOculto && typeof d.cardOculto === 'object') ? d.cardOculto : {}; ultimo = ''; sync(); }, () => {}); }catch(e){} })();
+    db.doc('cronograma/ficha-overrides').onSnapshot(sn => { const d = sn && sn.exists ? sn.data() : null; if(!d) return; NOVOS = (d.novos && typeof d.novos === 'object') ? d.novos : {}; CARD_OFF = (d.cardOculto && typeof d.cardOculto === 'object') ? d.cardOculto : {}; CAL_EQ = (d.calEquipe && typeof d.calEquipe === 'object') ? d.calEquipe : {}; ultimo = ''; sync(); }, () => {}); }catch(e){} })();
   const sync = ()=>{ const a = window.__mvAgenda; if(a && a.staff && a.staff()) assinarPlanilha(); const k = JSON.stringify(lista()); if(k!==ultimo){ const vazio = !ultimo || ultimo==='[]'; ultimo = k; if(vazio) mesAtual = null; render(); } };
   if(tabs) new MutationObserver(sync).observe(tabs, {childList:true, subtree:true});
   sync();
