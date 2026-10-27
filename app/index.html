@@ -442,6 +442,14 @@ fieldset.ponto.comum{border-color:var(--blue);background:var(--blue-dim);}
 .folder-tab.encerrado.active{opacity:1;}
 .folder-tab .enc{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;margin-left:8px;color:var(--text-faint);}
 .addr-row .lupa{min-width:48px;display:inline-flex;align-items:center;justify-content:center;align-self:stretch;font-size:17px;padding:0 10px;border-color:var(--blue);}
+.addr-row{position:relative;}
+.aero-lista{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:60;background:var(--panel-raised);border:1px solid var(--blue);border-radius:var(--radius-m);max-height:min(50vh,340px);overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;flex-direction:column;}
+.aero-lista button{all:unset;box-sizing:border-box;display:block;width:100%;padding:12px 14px;font-size:16px;line-height:1.35;color:var(--text);cursor:pointer;border-bottom:1px solid var(--hairline);overflow-wrap:anywhere;}
+.aero-lista button:last-child{border-bottom:0;}
+.aero-lista button:hover,.aero-lista button:focus-visible{background:var(--blue-dim);}
+.aero-lista button b{font-family:var(--font-mono);font-weight:600;}
+.aero-lista .aero-nota{padding:8px 14px;font-size:13px;color:var(--text-faint);}
+.parada-row .addr-hint.aero{display:block;}
 .addr-row .lupa[disabled]{opacity:.6;cursor:progress;}
 /* trajeto: a linha pontilhada liga o centro do 1º ponto ao centro do último */
 ol.paradas{list-style:none;margin:10px 0 4px;padding:0;display:flex;flex-direction:column;}
@@ -3699,6 +3707,13 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     const t = ev.target;
     if(t.dataset && t.dataset.par){
       const link = document.getElementById(t.dataset.par+'Link'); if(!link) return;
+      const endA = document.getElementById(t.dataset.par);
+      if(link.dataset.aero==='1' || (endA && endA.dataset.aero==='1')){   // preenchido por escolha de aeroporto
+        const cod = link.dataset.aeroIata || (endA && endA.dataset.aeroIata) || '';
+        if(cod && t.value.includes('('+cod+')')) return;           // nome ainda é o do aeroporto (ex.: + " Terminal 2"): mantém endereço e link
+        if(endA && endA.dataset.aero==='1'){ endA.value=''; delete endA.dataset.aero; delete endA.dataset.aeroIata; }
+        if(link.dataset.aero==='1'){ link.value=''; delete link.dataset.aero; delete link.dataset.aeroIata; }
+      }
       if(link.value.trim() && !ehLinkAuto(link.value)) return;   // link colado pela pessoa: não mexe
       const nome = t.value.trim();
       link.value = nome ? 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(nome) : '';
@@ -3775,6 +3790,50 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     else { if(end.dataset.auto==='1'){ end.value=''; } end.classList.remove('sugerido'); if(hint) hint.textContent='Endereço não encontrado automaticamente. Digite, se quiser. O link do Maps já abre pelo nome.'; }
   });
   view.addEventListener('input', ev=>{ const t=ev.target; if(ev.isTrusted && t.classList && t.classList.contains('sugerido')){ t.dataset.auto='0'; t.classList.remove('sugerido'); } });
+  view.addEventListener('input', ev=>{ const t=ev.target; if(ev.isTrusted && t.dataset && t.dataset.aero==='1' && !t.dataset.par){ delete t.dataset.aero; delete t.dataset.aeroIata; } });
+  // ===== aeroportos como ajuda de digitação nos nomes de local (Daniel, 27/10) =====
+  // Tabela fixa (OurAirports + Wikipedia): [IATA, ICAO, nome, cidade, UF/região, lat, lon]. Só aparece como sugestão enquanto a pessoa digita 2–4 letras de um código.
+  const AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Galeão - Antonio Carlos Jobim","Rio de Janeiro","RJ",-22.81,-43.2506],["SDU","SBRJ","Aeroporto Santos Dumont","Rio de Janeiro","RJ",-22.9104,-43.1628],["GRU","SBGR","Aeroporto Internacional de São Paulo/Guarulhos - Governador André Franco Montoro","Guarulhos","SP",-23.4313,-46.47],["CGH","SBSP","Aeroporto de São Paulo/Congonhas - Deputado Freitas Nobre","São Paulo","SP",-23.6277,-46.6546],["VCP","SBKP","Aeroporto Internacional de Viracopos","Campinas","SP",-23.0074,-47.1345],["CNF","SBCF","Aeroporto Internacional de Belo Horizonte/Confins - Tancredo Neves","Confins","MG",-19.6357,-43.9669],["PLU","SBBH","Aeroporto da Pampulha - Carlos Drummond de Andrade","Belo Horizonte","MG",-19.8507,-43.9503],["BSB","SBBR","Aeroporto Internacional de Brasília - Presidente Juscelino Kubitschek","Brasília","DF",-15.8692,-47.9208],["POA","SBPA","Aeroporto Internacional de Porto Alegre - Salgado Filho","Porto Alegre","RS",-29.994,-51.1675],["CWB","SBCT","Aeroporto Internacional de Curitiba - Afonso Pena","São José dos Pinhais","PR",-25.5285,-49.1758],["REC","SBRF","Aeroporto Internacional do Recife/Guararapes - Gilberto Freyre","Recife","PE",-8.1275,-34.923],["SSA","SBSV","Aeroporto Internacional de Salvador - Deputado Luís Eduardo Magalhães","Salvador","BA",-12.9086,-38.3225],["BEL","SBBE","Aeroporto Internacional de Belém/Val-de-Cans - Júlio Cezar Ribeiro","Belém","PA",-1.3793,-48.4762],["NAT","SBSG","Aeroporto Internacional de Natal - Governador Aluízio Alves","São Gonçalo do Amarante","RN",-5.7698,-35.3666],["SLZ","SBSL","Aeroporto Internacional de São Luís - Marechal Cunha Machado","São Luís","MA",-2.5864,-44.235],["FOR","SBFZ","Aeroporto Internacional de Fortaleza - Pinto Martins","Fortaleza","CE",-3.7758,-38.5322],["VIX","SBVT","Aeroporto de Vitória - Eurico de Aguiar Salles","Vitória","ES",-20.258,-40.285],["UDI","SBUL","Aeroporto de Uberlândia - Ten. Cel. Av. César Bombonato","Uberlândia","MG",-18.8836,-48.2259],["LAS","KLAS","Harry Reid International Airport","Las Vegas","NV, EUA",36.0834,-115.1518],["FLL","KFLL","Fort Lauderdale-Hollywood International Airport","Fort Lauderdale","FL, EUA",26.0726,-80.1527],["MIA","KMIA","Miami International Airport","Miami","FL, EUA",25.796,-80.2898],["MCO","KMCO","Orlando International Airport","Orlando","FL, EUA",28.4294,-81.309],["IAH","KIAH","George Bush Intercontinental Airport","Houston","TX, EUA",29.9844,-95.3414],["GDL","MMGL","Aeropuerto Internacional de Guadalajara","Guadalajara","JAL, México",20.5233,-103.3101],["MGA","MNMG","Aeropuerto Internacional Augusto C. Sandino","Manágua","Nicarágua",12.1415,-86.1682]];
+  const aeroCurto = a => String(a[2]).split(' - ')[0];
+  function aeroBusca(txt){ const q = String(txt||'').replace(/\s+/g,'').toUpperCase(); if(!/^[A-Z]{2,4}$/.test(q)) return { q, lista: [] };
+    return { q, lista: AEROS.filter(a => a[0].startsWith(q) || a[1].startsWith(q)) }; }
+  let aeroAberto = null;   // {inp, box, lista, q}
+  function aeroFechar(){ if(aeroAberto){ aeroAberto.box.remove(); aeroAberto.inp.setAttribute('aria-expanded','false'); aeroAberto = null; } }
+  function aeroMostrar(inp){
+    const r = aeroBusca(inp.value); aeroFechar(); if(!r.lista.length) return;
+    const row = inp.parentElement; if(!row || !row.classList.contains('addr-row')) return;
+    const box = document.createElement('div'); box.className = 'aero-lista'; box.setAttribute('role','listbox');
+    box.innerHTML = r.lista.map((a,i) => '<button type="button" role="option" data-aero="'+i+'"><b>'+esc(a[0])+'</b> · <b>'+esc(a[1])+'</b> · '+esc(a[3])+'/'+esc(a[4])+' · '+esc(aeroCurto(a))+'</button>').join('')
+      + (r.lista.length>1 ? '<div class="aero-nota">'+r.lista.length+' aeroportos com esse código. Toque no certo.</div>' : '');
+    box.addEventListener('pointerdown', e => e.preventDefault());   // não tira o foco do campo antes do toque
+    box.addEventListener('click', e => { const b = e.target.closest('[data-aero]'); if(!b) return; aeroAplicar(inp, r.lista[+b.dataset.aero]); });
+    row.appendChild(box); inp.setAttribute('aria-expanded','true');
+    aeroAberto = { inp, box, lista: r.lista, q: r.q };
+  }
+  function aeroAplicar(inp, a){
+    aeroFechar(); if(!a) return;
+    const k = inp.dataset.par, end = document.getElementById(k), link = document.getElementById(k+'Link'), hint = document.getElementById(k+'Hint');
+    inp.value = a[2]+' ('+a[0]+')';
+    const endTxt = a[2]+', '+a[3]+' - '+a[4];
+    const url = 'https://www.google.com/maps/search/?api=1&query='+a[5]+','+a[6];
+    const livreEnd = end && (!end.value.trim() || end.dataset.auto==='1' || end.dataset.aero==='1');
+    if(livreEnd){ end.value = endTxt; end.dataset.auto=''; end.dataset.aero='1'; end.dataset.aeroIata=a[0]; end.classList.remove('sugerido','buscando'); }
+    if(link && (!link.value.trim() || link.dataset.aero==='1' || ehLinkAuto(link.value))){ link.value = url; link.dataset.aero='1'; link.dataset.aeroIata=a[0]; link.classList.remove('sugerido'); }
+    if(hint){ hint.classList.add('aero');
+      hint.textContent = livreEnd ? '✈️ '+a[0]+'/'+a[1]+'. Terminal e ponto de desembarque não estão no cadastro: informe se souber.'
+        : 'Endereço mantido. Aeroporto escolhido: '+a[0]+'/'+a[1]+'. Terminal e ponto de desembarque não estão no cadastro: informe se souber.'; }
+  }
+  view.addEventListener('input', ev => { const t = ev.target; if(!(t.dataset && t.dataset.par) || !ev.isTrusted) return; aeroMostrar(t); });
+  view.addEventListener('keydown', ev => {
+    if(!aeroAberto || ev.target !== aeroAberto.inp) return;
+    if(ev.key==='Escape'){ ev.preventDefault(); aeroFechar(); return; }
+    if(ev.key==='Enter'){ ev.preventDefault();   // lista aberta: Enter nunca envia o formulário
+      const ex = aeroAberto.lista.filter(a => a[0]===aeroAberto.q);
+      if(aeroAberto.q.length===3 && ex.length===1 && aeroAberto.lista.length===1) aeroAplicar(aeroAberto.inp, ex[0]);   // só código IATA exato e único
+    }
+  });
+  document.addEventListener('pointerdown', ev => { if(aeroAberto && !aeroAberto.box.contains(ev.target) && ev.target!==aeroAberto.inp) aeroFechar(); });
+  view.addEventListener('focusout', ev => { if(aeroAberto && ev.target===aeroAberto.inp) setTimeout(()=>{ if(aeroAberto && document.activeElement!==aeroAberto.inp) aeroFechar(); }, 150); });
   // menu "usar local salvo" (vale também para paradas criadas depois)
   view.addEventListener('change', ev=>{
     const sel = ev.target; if(!sel.matches || !sel.matches('select.lg-pick') || sel.value==='') return;
