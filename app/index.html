@@ -4658,6 +4658,9 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   const VAZIAS = new Set(['show','shows','turne','equilibrium','pocket','the','fds','semana','2026','2027']);
   const tokensN = t => normN(t).split(' ').filter(w => w.length >= 3 && !VAZIAS.has(w));
   function mesmoNome(evento, b){ const a = new Set(tokensN(evento)); return [b.label, b.curto].some(t => tokensN(t).some(w => a.has(w))); }
+  // Daniel, 27/10: tudo que ENTRA a partir de agora entra visível para a equipe (ele oculta se quiser); o que já existia mantém o cadeado.
+  // Linhas da planilha que o calendário já conhecia (até a 369, importação de 24/10) seguem bloqueadas; eventos manuais novos nascem com publico:true.
+  const PL_ATE_HOJE = 369;
   const MARCA_MV = /\bMV:\s*([A-Za-z0-9_-]+)/i;
   function espelhoManual(plan){
     const man = {}, pl = {};
@@ -4688,7 +4691,8 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
       const mv = espelho(r); if(mv === 'pular') return;   // linha-espelho de evento manual: o manual (ID original) segue como fonte da agenda
       const ev = mv ? null : base.find(b => (SHOWS[b.id]||[]).includes(r.dataISO) && mesmoNome(r.evento, b));   // pasta só com data + nome compatível
       if(ev){ usados.add(ev.id); out.push(Object.assign({}, ev, { dias:[r.dataISO], plan:r, encerrado:false })); }
-      else out.push({ id:'pl'+r.linha, label:NOMES_LINHA[r.linha] || r.evento || '(sem nome na planilha)', curto:NOMES_LINHA[r.linha], sub:'· '+(r.cidade||''), dias:[r.dataISO], plan:r, oculto:true, semPasta:true, encerrado:false, periodo:null });
+      else { const novoPl = r.linha > PL_ATE_HOJE && mv !== 'orfao';   // linha nova da planilha entra visível (só calendário/ficha); as que já existiam mantêm o cadeado
+        out.push({ id:'pl'+r.linha, label:NOMES_LINHA[r.linha] || r.evento || '(sem nome na planilha)', curto:NOMES_LINHA[r.linha], sub:'· '+(r.cidade||''), dias:[r.dataISO], plan:r, oculto:!novoPl, publico:novoPl, semPasta:true, encerrado:false, periodo:null }); }
     });
     base.forEach(b => { if(!usados.has(b.id)) out.push(b); });
     return out.concat(novosEv().filter(e => e.dias[0] >= hoje));
