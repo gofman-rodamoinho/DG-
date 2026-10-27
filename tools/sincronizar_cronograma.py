@@ -49,7 +49,10 @@ def main():
         if k == 'cronograma/ficha-overrides':
             v = novo.get('viagem') if isinstance(novo.get('viagem'), dict) else {}
             nv = novo.get('novos') if isinstance(novo.get('novos'), dict) else {}
+            co = novo.get('cardOculto') if isinstance(novo.get('cardOculto'), dict) else {}
             novo = {'atualizadoEm': novo.get('atualizadoEm', ''), 'viagem': {w: x for w, x in v.items() if w in wids}, 'novos': nv}
+            if co:  # cards ocultos só da lista "Compromissos" (o evento segue no calendário): só a chave e a data do ajuste
+                novo['cardOculto'] = {k2: {'em': (x or {}).get('em', '') if isinstance(x, dict) else ''} for k2, x in co.items()}
         if k == 'cronograma/visibilidade' and isinstance(novo.get('liberados'), dict):
             novo['liberados'] = {w: v for w, v in novo['liberados'].items() if w in wids}
         if sem_data(novo) != sem_data(snap[k]):
