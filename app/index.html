@@ -2855,7 +2855,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     catch(err){ const c = err && err.code; return ({declined:'Download cancelado.', rate_limited:'Aguarde um instante e tente de novo.', too_large:'Arquivo grande demais para salvar aqui.'})[c] || 'Não foi possível salvar o arquivo.'; }
   }
 
-  window.__mv = { WEEKS, WEEK_ORDER, render, simplifyStatus, baixarDiaPdf, gerarDiaPdfBytes };
+  window.__mv = { WEEKS, WEEK_ORDER, render, simplifyStatus, baixarDiaPdf, gerarDiaPdfBytes, tzEvento: wid => ((META[wid] || {}).tz || '') };
   window.__mvAgenda = { lista: () => WEEK_ORDER.filter(visivel).map(wid => ({ id:wid, label:WEEKS[wid].label, curto:WEEKS[wid].curto, sub:WEEKS[wid].sub, periodo:PERIODOS[wid]||null, oculto: !!(isStaff() && LIBERADOS && LIBERADOS[wid] !== true), encerrado: encerrado(wid) })),
     staff: () => isStaff(),
     abrir: wid => { state.view = wid; state.team='ALL'; state.status='ALL'; state.q=''; state.openPerson=null; const si = document.getElementById('searchInput'); if(si) si.value=''; batchSelected.clear(); batchOpen = false; render(); } };
@@ -3469,7 +3469,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     h += '</div>';
     if(dados.atualizadoEm){
       const d = new Date(dados.atualizadoEm);
-      h += '<div class="crono-updated">Atualizado em '+(isNaN(d)?'':d.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}))+'. Horários de Brasília. Mudanças são avisadas pela produção.</div>';
+      h += '<div class="crono-updated">Atualizado em '+(isNaN(d)?'':d.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}))+'. '+(((window.__mv && window.__mv.tzEvento) ? window.__mv.tzEvento(window.__mvWeek) : '') === 'America/Los_Angeles' ? 'Horários locais de Las Vegas.' : 'Horários de Brasília.')+' Mudanças são avisadas pela produção.</div>';   // rótulo do fuso pelo tz do evento (META); 'Atualizado em' segue em Brasília
     }
     h += '<div class="crono-diag">'+esc(window.__mvDiag || ('Acesso detectado: banco = '+(semBanco?'indisponível':'carregando…')))+'</div>';
     view.innerHTML = h; bind();
