@@ -4640,6 +4640,24 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
       return { id:'nv'+id, novo:id, label:n.evento || '(evento sem nome)', sub:'· '+(n.cidade||''), dias:[iso], plan:r, oculto:n.publico !== true, publico:n.publico === true, semPasta:true, encerrado:false, periodo:null };
     }).filter(Boolean);
   }
+  // ===== espelho na planilha de shows (Daniel, 27/10): cada evento manual ganha uma linha na planilha com "MV:<ID>" na coluna N (obs2).
+  // A linha com marcador NÃO vira card nem se junta a pasta por data; sem marcador, só nome + data normalizados e únicos (1 manual × 1 linha).
+  const normN = t => String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const VAZIAS = new Set(['show','shows','turne','equilibrium','pocket','the','fds','semana','2026','2027']);
+  const tokensN = t => normN(t).split(' ').filter(w => w.length >= 3 && !VAZIAS.has(w));
+  function mesmoNome(evento, b){ const a = new Set(tokensN(evento)); return [b.label, b.curto].some(t => tokensN(t).some(w => a.has(w))); }
+  const MARCA_MV = /\bMV:\s*([A-Za-z0-9_-]+)/i;
+  function espelhoManual(plan){
+    const man = {}, pl = {};
+    Object.keys(NOVOS || {}).forEach(id => { const n = NOVOS[id] || {}, d = isoNovo(n.data); if(d){ const k = d + '|' + normN(n.evento); man[k] = (man[k]||0) + 1; } });
+    (plan || []).forEach(r => { if(r && r.dataISO){ const k = r.dataISO + '|' + normN(r.evento); pl[k] = (pl[k]||0) + 1; } });
+    return r => {
+      const m = MARCA_MV.exec(String(r.obs2||'') + ' ' + String(r.obs||''));
+      if(m) return (NOVOS && NOVOS[m[1]]) ? 'pular' : 'orfao';   // órfão (manual excluído): fica como linha da planilha, bloqueada, sem pasta
+      const k = r.dataISO + '|' + normN(r.evento);
+      return (man[k] === 1 && pl[k] === 1) ? 'pular' : null;
+    };
+  }
   function isoNovo(t){ const m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(String(t||'')); if(!m) return null; const d = new Date(Date.UTC(+m[3], +m[2]-1, +m[1])); if(d.getUTCDate() !== +m[1] || d.getUTCMonth() !== +m[2]-1) return null; return d.toISOString().slice(0,10); }
   // visibilidade (Daniel, 27/10): quem não é da equipe de edição (dono/editores do artefato) NÃO vê nada bloqueado (🔒):
   // nem pasta bloqueada, nem registro da planilha sem pasta, nem evento manual — só o que foi liberado e as exceções publico:true.
@@ -4651,10 +4669,12 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     const a = window.__mvAgenda; const base = ((a && a.lista()) || []).filter(e => { const ds = diasShow(e); return !ds.length || ds[ds.length-1] >= hoje; });   // calendário só de hoje pra frente
     if(!PLAN) return ((a && a.staff && a.staff()) ? base.concat(EXTRAS) : base).concat(novosEv().filter(e => e.dias[0] >= hoje));
     const usados = new Set(), out = [];
+    const espelho = espelhoManual(PLAN);
     PLAN.forEach(r => {
       if(!r.dataISO || r.dataISO < hoje) return;
       if(CANCELADOS.includes(r.linha)) return;   // fora do calendário (dados mantidos)
-      const ev = base.find(b => (SHOWS[b.id]||[]).includes(r.dataISO));
+      const mv = espelho(r); if(mv === 'pular') return;   // linha-espelho de evento manual: o manual (ID original) segue como fonte da agenda
+      const ev = mv ? null : base.find(b => (SHOWS[b.id]||[]).includes(r.dataISO) && mesmoNome(r.evento, b));   // pasta só com data + nome compatível
       if(ev){ usados.add(ev.id); out.push(Object.assign({}, ev, { dias:[r.dataISO], plan:r, encerrado:false })); }
       else out.push({ id:'pl'+r.linha, label:NOMES_LINHA[r.linha] || r.evento || '(sem nome na planilha)', curto:NOMES_LINHA[r.linha], sub:'· '+(r.cidade||''), dias:[r.dataISO], plan:r, oculto:true, semPasta:true, encerrado:false, periodo:null });
     });
