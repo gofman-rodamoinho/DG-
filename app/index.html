@@ -944,7 +944,20 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
     { nome:'mgm grand garden arena', end:['3799'],                             ll:[36.10481,-115.16859] },   // Wikipedia + OSM (arena; não usa o pino do hotel)
     { nome:'mgm grand hotel',        end:['3799','las vegas'],                 ll:[36.1028,-115.1694] },     // Wikipedia + OSM (hotel)
     { nome:'ibis',                   end:['abelardo bueno','1511'],            ll:[-22.9738782,-43.3717781] }, // ibis RJ Parque Olímpico (Accor 8176), salvo como "Ibis Metropolitano"
-    { nome:'galeao',                 end:['20 de janeiro','galeao','21941'],   ll:[-22.81,-43.2506] }          // Galeão sem sigla salva (itens antigos): mesma coordenada oficial do GIG
+    { nome:'galeao',                 end:['20 de janeiro','galeao','21941'],   ll:[-22.81,-43.2506] },         // Galeão sem sigla salva (itens antigos): mesma coordenada oficial do GIG
+    { nome:'palco floresta', end:['uniao e industria','10 000'], ll:[-22.4026548,-43.1347387] }, // Google Geocoding ROOFTOP 27/10: Estr. Uniao e Industria, 10000 - Itaipava, Petropolis - RJ, 25730-745 (venue Rock the Mountain)
+    { nome:'rock the mountain', end:['uniao e industria','10 000'], ll:[-22.4026548,-43.1347387] }, // mesmo venue (cabecalhos de dia "Rock the Mountain · Itaipava")
+    { nome:'ilha de camarins', end:['uniao e industria','10 000'], ll:[-22.4026548,-43.1347387] }, // camarins no mesmo endereco
+    { nome:'saida 7 linha amarela', end:['democraticos','1400'], ll:[-22.8720695,-43.2581974] } // Google Geocoding ROOFTOP 27/10: Av. dos Democraticos, 1400 - Bonsucesso, Rio de Janeiro - RJ, 21050-145
+  ];
+  // aliases verificados em 27/10; se surgir outro lugar com o mesmo trecho nos dados, o alias tem que sair — pino nunca é reaproveitado em outro local
+  // (valem SÓ para registros sem endereço salvo)
+  const ALIAS_SEM_END = [
+   { trecho:'prodigy', ll:[-22.914327,-43.166819] },
+   { trecho:'ibis metropolitano', ll:[-22.9738782,-43.3717781] },
+   { trecho:'rodoviaria do rio', ll:[-22.89933,-43.20876] },
+   { trecho:'tiete', ll:[-23.5161007,-46.6243829] },
+   { trecho:'sao jose dos campos', ll:[-23.19357,-45.87814] }
   ];
   const tem = (txt, trecho) => (' '+norm(txt)+' ').includes(' '+trecho+' ');
   const verificado = p => { const r = VERIFICADOS.find(v => tem(p.local, v.nome) && v.end.every(t => tem(p.endereco, t))); return r ? r.ll : null; };
@@ -968,7 +981,9 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
       return (nomeOk && endOk && linkOk) ? [a[5], a[6]] : null;
     }
     const c = coordDoMapa(p.mapa); if(c) return c;
-    return verificado(p);
+    const v = verificado(p); if(v) return v;
+    if(!String(p.endereco||'').trim()){ const a = ALIAS_SEM_END.find(x => tem(p.local, x.trecho)); if(a) return a.ll; }
+    return null;
   }
   function link(p){ const c = coord(p); if(!c) return '';
     const nome = String((p && (p.local || p.endereco)) || 'Destino').trim();
