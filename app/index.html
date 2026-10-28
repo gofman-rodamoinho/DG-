@@ -2988,26 +2988,28 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   };
   // locais já usados em qualquer item, de qualquer compromisso (documento cronograma/locais)
   let docLocais = null, locaisUsados = [], locaisRaw = null;
-  // locais tirados da lista "Usar local salvo" pelo x (cronograma/locais → "ocultos"); comparação pelo nome normalizado.
-  // Só some da lista: venue, hotéis, saídas, itens e deslocamentos continuam como estão. Voltam se alguém salvar um item com esse local.
+  // locais tirados da lista "Usar local salvo" pelo x (cronograma/locais → "ocultos"); chave = nome normalizado + "|" + endereço normalizado,
+  // para excluir só o local escolhido (mesmo nome com outro endereço, ou mesmo endereço com outro nome, continuam).
+  // Só some da lista: venue, hotéis, saídas, itens e deslocamentos continuam como estão. Salvar um item NÃO desoculta.
   const normLocal = t => String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-  const ocultosLocais = () => new Set(((locaisRaw && Array.isArray(locaisRaw.ocultos)) ? locaisRaw.ocultos : []).map(o => normLocal(o && o.local)).filter(Boolean));
+  const chaveLocal = x => normLocal(x && (x.local || x.endereco)) + '|' + normLocal(x && x.endereco);
+  const ocultosLocais = () => new Set(((locaisRaw && Array.isArray(locaisRaw.ocultos)) ? locaisRaw.ocultos : []).filter(o => o && typeof o.chave === 'string' && o.chave).map(o => o.chave));
   function lugaresSalvos(){
     const c = cfg() || {};
     const L = [];
-    if(c.venue && (c.venue.local||c.venue.endereco)) L.push(Object.assign({grupo:'Venue'}, c.venue));
-    (c.hoteis||[]).forEach(x=>L.push(Object.assign({grupo:'Hotel'}, x)));
-    (c.saidas||[]).forEach(x=>L.push(Object.assign({grupo:'Saída'}, x)));
+    const oc = ocultosLocais(), vis = x => !oc.has(chaveLocal(x));   // ocultos saem antes da deduplicação por nome: o "gêmeo" com outro endereço continua
+    if(c.venue && (c.venue.local||c.venue.endereco) && vis(c.venue)) L.push(Object.assign({grupo:'Venue'}, c.venue));
+    (c.hoteis||[]).forEach(x=>{ if(vis(x)) L.push(Object.assign({grupo:'Hotel'}, x)); });
+    (c.saidas||[]).forEach(x=>{ if(vis(x)) L.push(Object.assign({grupo:'Saída'}, x)); });
     const ja = new Set(L.map(x=>String(x.local||'').trim().toLowerCase()));
     try{ ((dados && dados.dias) || []).forEach(d=>{
       const pts = [{local:d.local, endereco:d.endereco, mapa:d.mapa}];
       (d.itens||[]).forEach(it=>{ if(it.tipo==='deslocamento'){ pts.push(it.partida||{}); (it.paradas||[]).forEach(x=>pts.push(x)); pts.push(it.destino||{}); } else pts.push({local:it.local, endereco:it.endereco, mapa:it.mapa}); });
-      pts.forEach(x=>{ const k=String(x.local||'').trim().toLowerCase(); if(k && !ja.has(k)){ ja.add(k); L.push({grupo:'Salvo', local:String(x.local).trim(), endereco:x.endereco||'', mapa:x.mapa||''}); } });
+      pts.forEach(x=>{ const k=String(x.local||'').trim().toLowerCase(); if(k && !ja.has(k) && vis({local:x.local, endereco:x.endereco||''})){ ja.add(k); L.push({grupo:'Salvo', local:String(x.local).trim(), endereco:x.endereco||'', mapa:x.mapa||''}); } });
     }); }catch(e){}
     locaisUsados.slice().sort((a,b)=>String(a.local).localeCompare(String(b.local),'pt-BR'))
-      .forEach(x=>{ const k=String(x.local||'').trim().toLowerCase(); if(k && !ja.has(k)){ ja.add(k); L.push(Object.assign({grupo:'Salvo'}, x)); } });
-    const oc = ocultosLocais();
-    return oc.size ? L.filter(x => !oc.has(normLocal(x.local||x.endereco))) : L;
+      .forEach(x=>{ const k=String(x.local||'').trim().toLowerCase(); if(k && !ja.has(k) && vis(x)){ ja.add(k); L.push(Object.assign({grupo:'Salvo'}, x)); } });
+    return L;
   }
   // depois de salvar um item: guarda os locais novos (ou completa endereço/link dos que já existem)
   async function guardarLocais(item){
@@ -3026,12 +3028,8 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
         else if(!ex.mapa && p.mapa){ ex.mapa=p.mapa; mudou=true; }
       }
     });
-    const usados = new Set(pts.map(p => normLocal(p.local)).filter(Boolean));
-    const ocAntes = (locaisRaw && Array.isArray(locaisRaw.ocultos)) ? locaisRaw.ocultos : [];
-    const ocDepois = ocAntes.filter(o => !usados.has(normLocal(o && o.local)));   // salvou um item com o local: ele volta à lista
-    if(ocDepois.length !== ocAntes.length) mudou = true;
     if(!mudou) return;
-    const novoDoc = Object.assign({}, locaisRaw || {}, { locais:lista }); if(ocAntes.length) novoDoc.ocultos = ocDepois;
+    const novoDoc = Object.assign({}, locaisRaw || {}, { locais:lista });   // preserva "ocultos" como está: salvar item não desoculta
     try{ await docLocais.set(novoDoc); locaisUsados = lista; locaisRaw = novoDoc; window.__mvAppSync && window.__mvAppSync(); }catch(e){}
   }
   // menu "usar local salvo": preenche nome, endereço e link de uma vez
@@ -3946,8 +3944,8 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     const sim = ev.target.closest('.lg-sim');
     if(sim){ const p = (box.__L||[])[+sim.dataset.i]; if(!p || !docLocais) return; sim.disabled = true; sim.textContent = 'Excluindo…';
       const atual = (locaisRaw && Array.isArray(locaisRaw.ocultos)) ? locaisRaw.ocultos : [];
-      const nome = String(p.local||p.endereco||'').trim();
-      const ocultos = atual.filter(o => normLocal(o && o.local) !== normLocal(nome)).concat([{ local:nome, endereco:p.endereco||'', em:new Date().toISOString() }]);
+      const nome = String(p.local||p.endereco||'').trim(), chave = chaveLocal(p);
+      const ocultos = atual.filter(o => !(o && o.chave === chave)).concat([{ chave, local:nome, endereco:p.endereco||'', em:new Date().toISOString() }]);
       const novoDoc = Object.assign({}, locaisRaw || {locais:locaisUsados}, { ocultos });
       try{ await docLocais.set(novoDoc); locaisRaw = novoDoc; window.__mvAppSync && window.__mvAppSync();
         lista.innerHTML = listaLugarHtml(box); if(!(box.__L||[]).length) lgFechar(box); }
