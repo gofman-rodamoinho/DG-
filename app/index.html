@@ -935,12 +935,18 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
 (function(){
   const norm = t => String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
   const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  // (iv) chave = nome normalizado + "|" + endereço normalizado, exatamente como estão salvos.
-  // Casa Natura São Paulo NÃO entra: o endereço salvo (Rua Artur de Azevedo, 2134) não confere com o da fonte (Rua Estados Unidos, 1).
-  const VERIFICADOS = {};
-  [['[removido]','Alameda Santos, 1437 - Jardins, São Paulo - SP',-23.56393,-46.655817],
-   ['Ibis Metropolitano Rio de Janeiro','Av. Embaixador Abelardo Bueno, 1511 - Barra da Tijuca, Rio de Janeiro - RJ',-22.9738782,-43.3717781]]
-    .forEach(([n,e,la,lo]) => { VERIFICADOS[norm(n)+'|'+norm(e)] = [la,lo]; });
+  // (iv) locais conferidos (fonte oficial + coordenadas): casa SÓ se o nome normalizado contém o trecho E o endereço salvo contém os trechos do endereço oficial.
+  // Nunca por nome sozinho; um pino nunca é reaproveitado em outro local. Endereços salvos não são alterados.
+  const VERIFICADOS = [
+    { nome:'casa natura',            end:['artur de azevedo','2134'],          ll:[-23.56793,-46.69076] },   // casanaturamusical.com.br + OSM
+    { nome:'prodigy',                end:['silvio de noronha','365'],          ll:[-22.914327,-43.166819] }, // Prodigy Santos Dumont (Grupo Wish/Booking) + OSM
+    { nome:'melia jardim europa',    end:['joao cachoeira','107'],             ll:[-23.58114,-46.67898] },   // melia.com + OSM (a variante "Alameda Campinas" fica sem Uber)
+    { nome:'mgm grand garden arena', end:['3799'],                             ll:[36.10481,-115.16859] },   // Wikipedia + OSM (arena; não usa o pino do hotel)
+    { nome:'mgm grand hotel',        end:['3799','las vegas'],                 ll:[36.1028,-115.1694] },     // Wikipedia + OSM (hotel)
+    { nome:'ibis',                   end:['abelardo bueno','1511'],            ll:[-22.9738782,-43.3717781] } // ibis RJ Parque Olímpico (Accor 8176), salvo como "Ibis Metropolitano"
+  ];
+  const tem = (txt, trecho) => (' '+norm(txt)+' ').includes(' '+trecho+' ');
+  const verificado = p => { const r = VERIFICADOS.find(v => tem(p.local, v.nome) && v.end.every(t => tem(p.endereco, t))); return r ? r.ll : null; };
   const num = x => { if(x==null || x==='') return null; const v = Number(x); return isFinite(v) ? v : null; };
   const valida = (la,lo) => la!=null && lo!=null && Math.abs(la)<=90 && Math.abs(lo)<=180 && !(la===0 && lo===0) ? [la,lo] : null;
   function coordDoMapa(u){
@@ -961,7 +967,7 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
       return (nomeOk && endOk && linkOk) ? [a[5], a[6]] : null;
     }
     const c = coordDoMapa(p.mapa); if(c) return c;
-    return VERIFICADOS[norm(p.local)+'|'+norm(p.endereco)] || null;
+    return verificado(p);
   }
   function link(p){ const c = coord(p); if(!c) return '';
     const nome = String((p && (p.local || p.endereco)) || 'Destino').trim();
