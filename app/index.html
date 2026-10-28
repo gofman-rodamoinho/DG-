@@ -895,6 +895,26 @@ html.mv-entrando :is(.panel,.cal-item,.slot,.prow,.leg-card,.hotel-card,.dir-car
 html{scroll-padding-bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + 84px);}
 #mvTopo#mvTopo{bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + 84px)!important;}   /* "voltar ao topo" logo acima da cápsula */
 
+/* ===== v176: imagem anexada ao compromisso (Arquivos) + visualizador da imagem inteira ===== */
+.dir-img{display:flex;flex-direction:column;gap:10px;}
+.dir-img .dir-img-t{font-family:var(--font-body);font-size:13.5px;font-weight:600;color:var(--text);}
+.dir-img .dir-img-mini{display:block;padding:0;border:1px solid var(--hairline);border-radius:var(--radius-s);overflow:hidden;background:#fff;cursor:zoom-in;line-height:0;}
+.dir-img .dir-img-mini img{display:block;width:100%;height:auto;}
+.dir-img .dir-img-btn{align-self:flex-start;min-height:44px;background:transparent;color:var(--text);border:1px solid var(--hairline);border-radius:999px;cursor:pointer;
+  font-family:var(--font-display);font-size:12.5px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;padding:8px 16px;}
+.dir-img .dir-img-btn:hover{border-color:var(--blue);color:var(--blue);}
+.dir-img .dir-img-btn:focus-visible,.dir-img .dir-img-mini:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+.mv-img-view{position:fixed;inset:0;z-index:95;display:flex;flex-direction:column;background:#07090c;}
+.mv-img-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:calc(env(safe-area-inset-top,0px) + 10px) max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--hairline);background:#0e1117;}
+.mv-img-bar .t{flex:1 1 180px;min-width:0;font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:.3px;color:var(--text);}
+.mv-img-bar button{min-height:44px;background:var(--panel);color:var(--text);border:1px solid var(--hairline);border-radius:999px;cursor:pointer;
+  font-family:var(--font-display);font-size:12.5px;letter-spacing:1px;text-transform:uppercase;padding:8px 14px;}
+.mv-img-bar button:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+.mv-img-bar .x{width:44px;padding:0;font-size:20px;}
+.mv-img-area{flex:1 1 auto;overflow:auto;-webkit-overflow-scrolling:touch;padding:12px max(12px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(12px,env(safe-area-inset-left,0px));}
+.mv-img-area img{display:block;margin:0 auto;background:#fff;width:100%;max-width:none;height:auto;}
+.mv-img-view.real .mv-img-area img{width:auto;max-width:none;}
+.mv-img-view.real .mv-img-area{cursor:grab;}
 /* ===== v174-A: "Informações do evento" com a mesma linguagem do resto (cartões, títulos de seção, fonte, botões) ===== */
 .mv-info-card{padding:0;gap:0;overflow:hidden;border-radius:var(--radius-m);border:1px solid var(--hairline);background:rgba(14,17,22,.92);box-shadow:var(--shadow);}
 .mv-info-head{padding:14px 16px;border-bottom:1px solid var(--hairline);align-items:center;}
@@ -3808,13 +3828,40 @@ a.dir-nome:hover{text-decoration:underline;}
     });
     return h + '</section>';
   }
+  // v176: imagens anexadas a um compromisso (arquivo publicado ao lado da página). Hoje: só o setlist do RTM 1º FDS.
+  const IMAGENS_EVENTO = {
+    rtm1: [ { titulo:'Setlist - Rock the Mountain - 1º FDS', src:'arquivos/setlist-rock-the-mountain-1fds.png', w:1600, h:899 } ]
+  };
+  const imagensEvento = () => IMAGENS_EVENTO[window.__mvWeek] || [];
   function blocoArquivos(){
-    const arq = arquivosDiretorio();
+    const arq = arquivosDiretorio(), imgs = imagensEvento();
     return '<section class="dir-sec" aria-label="Arquivos"><div class="dir-gt">📎 Arquivos</div>'
+      + imgs.map((im,i) => '<div class="dir-card dir-img"><div class="dir-img-t">🖼️ '+esc(im.titulo)+'</div>'
+          + '<button type="button" class="dir-img-mini" data-info-img="'+i+'" aria-label="Abrir '+esc(im.titulo)+' inteira"><img src="'+esc(im.src)+'" alt="'+esc(im.titulo)+'" width="'+im.w+'" height="'+im.h+'" loading="lazy" decoding="async"></button>'
+          + '<button type="button" class="dir-img-btn" data-info-img="'+i+'">🔍 Abrir imagem inteira</button></div>').join('')
       + (arq.length ? '<div class="dir-card dir-arqs">'+arq.map(a => '<a class="pdf-link" href="'+esc(a.url)+'" target="_blank" rel="noopener">'+(a.interno?'🔒 ':'')+esc(a.titulo)+'</a>').join('')+'</div>'
-                    : '<div class="dir-card"><span class="dir-v vazio">Nenhum arquivo anexado a este compromisso ainda.</span></div>')
+                    : (imgs.length ? '' : '<div class="dir-card"><span class="dir-v vazio">Nenhum arquivo anexado a este compromisso ainda.</span></div>'))
       + '</section>';
   }
+  // visualizador da imagem inteira: abre por cima do painel; "Tamanho real" mostra os pixels originais com rolagem
+  let imgView = null, imgVolta = null;
+  function fecharImagem(){ if(!imgView) return; imgView.remove(); imgView = null; if(imgVolta && imgVolta.isConnected) imgVolta.focus({preventScroll:true}); imgVolta = null; }
+  function abrirImagem(im){
+    fecharImagem(); imgVolta = document.activeElement;
+    imgView = document.createElement('div'); imgView.className = 'mv-img-view'; imgView.setAttribute('role','dialog'); imgView.setAttribute('aria-modal','true'); imgView.setAttribute('aria-label', im.titulo);
+    imgView.innerHTML = '<div class="mv-img-bar"><span class="t"></span><button type="button" data-img-zoom aria-pressed="false">Tamanho real</button><button type="button" class="x" data-img-fechar aria-label="Fechar imagem">×</button></div>'
+      + '<div class="mv-img-area"><img alt=""></div>';
+    imgView.querySelector('.t').textContent = im.titulo;
+    const img = imgView.querySelector('img'); img.src = im.src; img.alt = im.titulo; img.width = im.w; img.height = im.h;
+    imgView.addEventListener('click', ev => {
+      if(ev.target.closest('[data-img-fechar]')){ fecharImagem(); return; }
+      const z = ev.target.closest('[data-img-zoom]');
+      if(z){ const real = imgView.classList.toggle('real'); z.setAttribute('aria-pressed', String(real)); z.textContent = real ? 'Ajustar à tela' : 'Tamanho real'; imgView.querySelector('.mv-img-area').scrollTo(0,0); }
+    });
+    document.body.appendChild(imgView);
+    const x = imgView.querySelector('[data-img-fechar]'); if(x) x.focus({preventScroll:true});
+  }
+  document.addEventListener('keydown', ev => { if(ev.key==='Escape' && imgView){ ev.preventDefault(); ev.stopImmediatePropagation(); fecharImagem(); } }, true);
   function blocoGeral(){   // só o dono (era o card "Dados gerais do compromisso")
     const g = geral || {}, sh = g.show || {};
     const per = g.inicio ? fmtData(g.inicio)+(g.fim && g.fim!==g.inicio ? ' – '+fmtData(g.fim) : '') : '';
@@ -3837,7 +3884,7 @@ a.dir-nome:hover{text-decoration:underline;}
     return h + '</div>';
   }
   let infoEl = null, infoVolta = null;
-  function fecharInfo(){ if(!infoEl) return; infoEl.remove(); infoEl = null; document.body.classList.remove('mv-info-open'); if(infoVolta && infoVolta.isConnected) infoVolta.focus({preventScroll:true}); infoVolta = null; }
+  function fecharInfo(){ if(!infoEl) return; fecharImagem(); infoEl.remove(); infoEl = null; document.body.classList.remove('mv-info-open'); if(infoVolta && infoVolta.isConnected) infoVolta.focus({preventScroll:true}); infoVolta = null; }
   function abrirInfo(){
     fecharInfo(); infoVolta = document.activeElement;
     infoEl = document.createElement('div'); infoEl.className = 'mv-info-modal'; infoEl.setAttribute('role','dialog'); infoEl.setAttribute('aria-modal','true'); infoEl.setAttribute('aria-label','Informações do evento');
@@ -3846,6 +3893,7 @@ a.dir-nome:hover{text-decoration:underline;}
     infoEl.addEventListener('click', ev => {
       if(ev.target === infoEl || ev.target.closest('[data-info-fechar]')){ fecharInfo(); return; }
       if(ev.target.closest('[data-info-geral]')){ fecharInfo(); acao('geral'); }
+      const bi = ev.target.closest('[data-info-img]'); if(bi){ const im = imagensEvento()[+bi.dataset.infoImg]; if(im) abrirImagem(im); }
     });
     const x = infoEl.querySelector('[data-info-fechar]'); if(x) x.focus({preventScroll:true});
   }
