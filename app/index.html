@@ -799,7 +799,7 @@ body:not(.is-staff) [data-act="pdf-dia"]{display:none!important;}
   --radius-s:12px; --radius-m:20px;
   --shadow:0 14px 34px -16px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.045);
   --glass:blur(18px) saturate(140%);
-  --mv-topo:calc(env(safe-area-inset-top,0px) + 84px);
+  --mv-topo:calc(env(safe-area-inset-top,0px) + 28px);   /* v174: a cápsula foi para o rodapé; o topo não reserva mais espaço */
   --show-bg:#29313c; --show-bg-hover:#323b48;   /* v173: dia de show/ensaio no calendário (o tom creme do modo claro some no tema escuro) */
   color-scheme:dark;
 }
@@ -887,6 +887,69 @@ html.mv-entrando :is(.panel,.cal-item,.slot,.prow,.leg-card,.hotel-card,.dir-car
   html.mv-entrando *{animation:none!important;}
   .mv-nav-pill,.mv-nav button{transition:none!important;}
 }
+/* ===== v174: cápsula fixa no RODAPÉ (centralizada, mesma aparência) ===== */
+/* --mv-nav-sobe = altura da barra "Instalar como app" quando ela está aberta (medida pelo script da navbar) */
+.mv-nav{top:auto!important;bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + 12px);}
+.wrap{padding-bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + 108px)!important;}
+html{scroll-padding-bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + 84px);}
+#mvTopo#mvTopo{bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + 84px)!important;}   /* "voltar ao topo" logo acima da cápsula */
+
+/* ===== v174-A: "Informações do evento" com a mesma linguagem do resto (cartões, títulos de seção, fonte, botões) ===== */
+.mv-info-card{padding:0;gap:0;overflow:hidden;border-radius:var(--radius-m);border:1px solid var(--hairline);background:rgba(14,17,22,.92);box-shadow:var(--shadow);}
+.mv-info-head{padding:14px 16px;border-bottom:1px solid var(--hairline);align-items:center;}
+.mv-info-head h2{font-family:var(--font-display);font-weight:600;font-size:clamp(22px,5.5vw,28px);letter-spacing:.3px;line-height:1.1;}
+.mv-info-x{width:44px;height:44px;font-size:20px;background:var(--panel);}
+.mv-info-body{padding:14px 16px 18px;gap:16px;}
+.mv-info-body .dir-sec{gap:8px;}
+.mv-info-body .dir-gt{font-family:var(--font-display);font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-faint);}
+.mv-info-body .dir-card{background:var(--panel);border:1px solid var(--hairline);border-radius:var(--radius-s);padding:12px 14px;gap:6px;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;}
+.mv-info-body .dir-nome{font-family:var(--font-body);font-size:13.5px;font-weight:600;color:var(--text);}
+.mv-info-body a.dir-nome{color:var(--text);text-decoration:none;}
+.mv-info-body a.dir-nome:hover{text-decoration:underline;}
+.mv-info-body .dir-l{font-family:var(--font-body);font-size:12.5px;line-height:1.45;gap:10px;}
+.mv-info-body .dir-k{flex:0 0 100px;color:var(--text-faint);}
+.mv-info-body .dir-v{color:var(--text);}
+.mv-info-body .dir-v.vazio{color:var(--amber);}
+.mv-info-body .dir-card .pend{font-family:var(--font-body);}
+.mv-info-body .mv-info-nota{font-family:var(--font-body);font-size:11.5px;color:var(--text-faint);}
+.mv-info-body .dir-sec .btn[data-info-geral]{align-self:flex-start;min-height:40px;background:transparent;color:var(--text);border:1px solid var(--hairline);border-radius:999px;
+  font-family:var(--font-display);font-size:12.5px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;padding:8px 16px;box-shadow:none;}
+.mv-info-body .dir-sec .btn[data-info-geral]:hover{border-color:var(--blue);color:var(--blue);}
+
+/* ===== v174-B: cabeçalho do compromisso — nome do evento em destaque; "Minha Viagem" como marca ===== */
+header.top h1 .ev-nome{display:block;text-wrap:balance;overflow-wrap:anywhere;}
+header.top .mv-marca{color:var(--text);font-weight:500;}
+header.top .mv-marca .route{color:var(--text-dim);margin-left:2px;}
+header.top.mv-sem-ev .mv-marca{display:none;}
+
+/* ===== v174-C: cápsula inferior sempre inteira (iframe do Claude, celular estreito, barras do navegador) ===== */
+.mv-nav{bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + var(--mv-vv,0px) + 12px)!important;}
+.mv-nav-in{box-sizing:border-box;max-width:min(660px,100%);}
+.mv-nav button{overflow:hidden;}
+.mv-nav button span{max-width:100%;overflow-wrap:normal;white-space:nowrap;}
+@media (max-width:380px){ .mv-nav-in{padding:4px;} .mv-nav-pill{top:4px;bottom:4px;} .mv-nav button{font-size:12.5px;letter-spacing:0;min-height:48px;padding:4px 1px;} }
+@media (max-width:330px){ .mv-nav button{font-size:11.5px;} }
+.wrap{padding-bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + var(--mv-vv,0px) + 108px)!important;}
+#mvTopo#mvTopo{bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + var(--mv-vv,0px) + 84px)!important;}
+/* ===== v174: lista de Equipe — lista própria no tema escuro (a nativa saía branca com texto branco no computador) ===== */
+.bar2-sel{position:relative;}
+.bar2-sel.aberta{z-index:66;}
+.bar2-sel select option,.bar2-sel select optgroup{color:#14171c;background:#f4f5f7;font-family:var(--font-body);}   /* reserva, se a lista própria não carregar */
+.bar2-sel .mv-sel-nat{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;border:0!important;opacity:0;pointer-events:none;overflow:hidden;clip:rect(0 0 0 0);}
+.mv-sel-btn{width:100%;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;text-align:left;
+  font-family:var(--font-body);font-size:16px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--text);
+  background:rgba(255,255,255,.05);border:1px solid var(--hairline);border-radius:var(--radius-s);padding:8px 12px;}
+.mv-sel-btn:hover{border-color:rgba(255,255,255,.22);}
+.mv-sel-btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+.mv-sel-btn .seta{color:var(--text-dim);font-size:13px;}
+.mv-sel-lista{position:absolute;left:12px;right:12px;top:calc(100% - 4px);z-index:66;display:flex;flex-direction:column;gap:2px;padding:6px;margin:0;list-style:none;
+  background:#161a21;border:1px solid rgba(255,255,255,.14);border-radius:14px;box-shadow:0 18px 40px -12px rgba(0,0,0,.75);}
+.mv-sel-lista[hidden]{display:none!important;}
+.mv-sel-lista [role="option"]{display:flex;align-items:center;min-height:44px;padding:10px 12px;border-radius:10px;cursor:pointer;
+  font-family:var(--font-body);font-size:15px;font-weight:500;letter-spacing:0;text-transform:none;color:#eef0f4;background:transparent;}
+.mv-sel-lista [role="option"]:hover,.mv-sel-lista [role="option"].foco{background:rgba(255,255,255,.08);}
+.mv-sel-lista [role="option"][aria-selected="true"]{background:rgba(182,204,230,.18);color:#ffffff;}
+.mv-sel-lista [role="option"][aria-selected="true"]::after{content:"✓";margin-left:auto;color:var(--blue);}
 </style>
 </head>
 <body>
@@ -5508,6 +5571,59 @@ body.has-install-bar #mvTopo{bottom:calc(150px + env(safe-area-inset-bottom,0px)
   ativo(); requestAnimationFrame(ativo);
   // entrada leve dos cartões ao trocar de compromisso, dia ou mês
   document.addEventListener('click', ev => { if(ev.target.closest && ev.target.closest('.folder-tab,.cal-item[data-wid],.crono-day-btn,#mvBack,#calPrev,#calNext')) setTimeout(entrar, 0); }, true);
+  // v174: cápsula no rodapé sobe acima da barra "Instalar como app" quando ela estiver aberta
+  const ib = document.getElementById('installBar');
+  const medirIB = () => { const vis = !!(ib && ib.offsetHeight > 0 && getComputedStyle(ib).display!=='none');   /* mesma regra do "voltar ao topo": o que está na tela */ document.documentElement.style.setProperty('--mv-nav-sobe', vis ? (ib.offsetHeight+'px') : '0px'); };
+  if(ib){ new MutationObserver(medirIB).observe(ib, { attributes:true, attributeFilter:['hidden','class','style'], childList:true, subtree:true }); }
+  new MutationObserver(medirIB).observe(body, { attributes:true, attributeFilter:['class'] });
+  window.addEventListener('resize', medirIB); medirIB();
+  // v174-C: se a barra do navegador/app cobrir o rodapé da janela (iOS), a cápsula sobe o tanto que estiver coberto
+  const vv = window.visualViewport;
+  const ajusteVV = () => { if(!vv) return; const coberto = Math.abs((vv.scale||1) - 1) > 0.01 ? 0 : Math.max(0, Math.round(window.innerHeight - (vv.height + vv.offsetTop)));
+    document.documentElement.style.setProperty('--mv-vv', Math.min(coberto, 160)+'px'); };
+  if(vv){ vv.addEventListener('resize', ajusteVV); vv.addEventListener('scroll', ajusteVV); } ajusteVV();
+  // v174-B: cabeçalho do compromisso — o nome do evento vira o título; "Minha Viagem" + rota vira a marca na linha de baixo.
+  // Só move os mesmos elementos de antes (o app continua escrevendo neles); nada de dado novo.
+  (function(){
+    const hd = document.querySelector('header.top'), h1 = hd && hd.querySelector('h1'), lab = document.getElementById('headerWeekLabel'),
+          rota = document.getElementById('headerRoute'), sub = document.getElementById('headerSub'), mut = sub && sub.parentElement;
+    if(!hd || !h1 || !lab || !rota || !sub || !mut || lab.closest('h1')) return;
+    lab.classList.add('ev-nome'); h1.replaceChildren(lab);
+    const marca = document.createElement('span'); marca.className = 'mv-marca'; marca.append('Minha Viagem ', rota, ' — ');
+    mut.replaceChildren(marca, sub);
+    const semEv = () => hd.classList.toggle('mv-sem-ev', lab.textContent.trim()==='Minha Viagem');   // nenhum compromisso aberto: sem repetir "Minha Viagem"
+    new MutationObserver(semEv).observe(lab, { childList:true, characterData:true, subtree:true }); semEv();
+  })();
+  // v174: lista de Equipe própria (tema escuro, mesma fonte). O <select> original continua por baixo e é ele que filtra.
+  function listaEquipe(sel){
+    if(!sel || sel.dataset.mvLista) return; sel.dataset.mvLista = '1'; sel.classList.add('mv-sel-nat'); sel.tabIndex = -1; sel.setAttribute('aria-hidden','true');
+    const box = sel.closest('.bar2-sel'); if(!box) return;
+    const ops = Array.from(sel.options).map(o => ({ v:o.value, t:o.textContent }));
+    const atual = () => (ops.find(o => o.v===sel.value) || ops[0] || {t:''}).t;
+    const id = 'mvSelLista';
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'mv-sel-btn'; btn.setAttribute('aria-haspopup','listbox'); btn.setAttribute('aria-expanded','false'); btn.setAttribute('aria-controls', id);
+    btn.innerHTML = '<span class="txt"></span><span class="seta" aria-hidden="true">▾</span>'; btn.querySelector('.txt').textContent = atual();
+    const ul = document.createElement('ul'); ul.className = 'mv-sel-lista'; ul.id = id; ul.setAttribute('role','listbox'); ul.setAttribute('aria-label','Equipe'); ul.hidden = true;
+    ul.innerHTML = ops.map((o,i) => '<li role="option" data-i="'+i+'" aria-selected="'+(o.v===sel.value)+'"></li>').join('');
+    ul.querySelectorAll('[role="option"]').forEach((li,i) => { li.textContent = ops[i].t; });
+    sel.insertAdjacentElement('afterend', btn); btn.insertAdjacentElement('afterend', ul);
+    let foco = -1;
+    const marcar = i => { foco = i; ul.querySelectorAll('[role="option"]').forEach((li,j) => li.classList.toggle('foco', j===i)); };
+    const fechar = () => { ul.hidden = true; box.classList.remove('aberta'); btn.setAttribute('aria-expanded','false'); if(selAberta && selAberta.box===box) selAberta = null; };
+    const abrir = () => { ul.hidden = false; box.classList.add('aberta'); btn.setAttribute('aria-expanded','true'); marcar(Math.max(0, ops.findIndex(o => o.v===sel.value))); selAberta = { box, fechar }; };
+    const escolher = i => { const o = ops[i]; fechar(); if(!o || o.v===sel.value) return; sel.value = o.v; sel.dispatchEvent(new Event('change', { bubbles:true })); };
+    btn.addEventListener('click', ev => { ev.preventDefault(); ul.hidden ? abrir() : fechar(); });
+    ul.addEventListener('click', ev => { ev.preventDefault(); const li = ev.target.closest('[role="option"]'); if(li) escolher(+li.dataset.i); });   // preventDefault: o clique não vai para o <select> do rótulo
+    btn.addEventListener('keydown', ev => {
+      if(ev.key==='ArrowDown' || ev.key==='ArrowUp'){ ev.preventDefault(); if(ul.hidden) abrir(); else marcar((foco + (ev.key==='ArrowDown'?1:-1) + ops.length) % ops.length); }
+      else if((ev.key==='Enter' || ev.key===' ') && !ul.hidden && foco>=0){ ev.preventDefault(); escolher(foco); }
+      else if(ev.key==='Escape' && !ul.hidden){ ev.preventDefault(); fechar(); }
+    });
+  }
+  let selAberta = null;
+  document.addEventListener('pointerdown', ev => { if(selAberta && !selAberta.box.contains(ev.target)) selAberta.fechar(); });
+  const cv = document.getElementById('cronoView');
+  if(cv){ const ver = () => listaEquipe(cv.querySelector('select#equipeSel:not([data-mv-lista])')); new MutationObserver(ver).observe(cv, { childList:true, subtree:true }); ver(); }
   entrar();
 })();
 </script>
