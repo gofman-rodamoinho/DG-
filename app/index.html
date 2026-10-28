@@ -948,7 +948,20 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
     { nome:'palco floresta', end:['uniao e industria','10 000'], ll:[-22.4026548,-43.1347387] }, // Google Geocoding ROOFTOP 27/10: Estr. Uniao e Industria, 10000 - Itaipava, Petropolis - RJ, 25730-745 (venue Rock the Mountain)
     { nome:'rock the mountain', end:['uniao e industria','10 000'], ll:[-22.4026548,-43.1347387] }, // mesmo venue (cabecalhos de dia "Rock the Mountain · Itaipava")
     { nome:'ilha de camarins', end:['uniao e industria','10 000'], ll:[-22.4026548,-43.1347387] }, // camarins no mesmo endereco
-    { nome:'saida 7 linha amarela', end:['democraticos','1400'], ll:[-22.8720695,-43.2581974] } // Google Geocoding ROOFTOP 27/10: Av. dos Democraticos, 1400 - Bonsucesso, Rio de Janeiro - RJ, 21050-145
+    { nome:'saida 7 linha amarela', end:['democraticos','1400'], ll:[-22.8720695,-43.2581974] }, // Google Geocoding ROOFTOP 27/10: Av. dos Democraticos, 1400 - Bonsucesso, Rio de Janeiro - RJ, 21050-145
+    // 2ª leva (nome + endereço conferidos no Google Places e Google Geocoding ROOFTOP em 27/10)
+    { nome:'tbc', end:['major diogo','315'], ll:[-23.5539394,-46.6429894] }, // TBC - Teatro Brasileiro de Comédia, R. Maj. Diogo 315
+    { nome:'lagune', end:['salvador allende','6555'], ll:[-22.9801478,-43.4098689] }, // Lagune Barra Hotel, Av. Salvador Allende 6555
+    { nome:'ibis budget petropolis', end:['paulo herve','778'], ll:[-22.5125402,-43.2188701] }, // ibis budget Petrópolis (Bingen)
+    { nome:'intercity aeroporto', end:['santos dumont','1883'], ll:[-12.9013354,-38.334408] }, // Hotel Intercity Salvador Aeroporto
+    { nome:'holiday inn express belem ananindeua', end:['br 316','km 01'], ll:[-1.4019298,-48.4282466] }, // Holiday Inn Express Belém Ananindeua
+    { nome:'bugan', end:['domingos ferreira','4661'], ll:[-8.1290891,-34.9011506] }, // Bugan Hotel Recife by Atlantica
+    { nome:'quality hotel pampulha', end:['antonio carlos','7456'], ll:[-19.8568705,-43.9600847] }, // Quality Hotel Pampulha, BH
+    { nome:'golden tulip', end:['shtn','trecho 1','1b'], ll:[-15.788857,-47.8292857] }, // Golden Tulip Brasília Alvorada
+    { nome:'melia campinas', end:['severo penteado','140'], ll:[-22.897438,-47.054578] }, // Meliá Campinas (cidade de Campinas)
+    { nome:'venit', end:['abelardo bueno','2710'], ll:[-22.9725676,-43.3907776] }, // Venit + Mio Barra Hotel, RJ
+    { nome:'vitoria hotel concept campinas', end:['jose de sousa campos','425'], ll:[-22.9025071,-47.0481715] }, // Vitória Hotel Concept Campinas
+    { nome:'innside by melia sao paulo itaim', end:['jesuino arruda','806'], ll:[-23.582688,-46.678101] } // INNSiDE by Meliá São Paulo Itaim
   ];
   // aliases verificados em 27/10; se surgir outro lugar com o mesmo trecho nos dados, o alias tem que sair — pino nunca é reaproveitado em outro local
   // (valem SÓ para registros sem endereço salvo)
@@ -957,7 +970,16 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
    { trecho:'ibis metropolitano', ll:[-22.9738782,-43.3717781] },
    { trecho:'rodoviaria do rio', ll:[-22.89933,-43.20876] },
    { trecho:'tiete', ll:[-23.5161007,-46.6243829] },
-   { trecho:'sao jose dos campos', ll:[-23.19357,-45.87814] }
+   { trecho:'sao jose dos campos', ll:[-23.19357,-45.87814] },
+   // 2ª leva (trecho único em todos os dados em 27/10; mesma regra: se surgir outro lugar com o mesmo trecho, o alias sai)
+   { trecho:'atlante plaza', ll:[-8.13639,-34.9020321] }, // Hotel Atlante Plaza, Recife (Google Places)
+   { trecho:'tivoli belem', ll:[-1.448333,-48.498055] }, // Tivoli Maiorana Belém Pará Hotel — único Tivoli de Belém (site oficial + Google Places)
+   { trecho:'mercure lourdes', ll:[-19.9375807,-43.945014] }, // Mercure Belo Horizonte Lourdes (Google Places)
+   { trecho:'royal tulip', ll:[-15.786811,-47.828919] }, // Royal Tulip Brasília Alvorada (Google Places)
+   { trecho:'intercity porto alegre aeroporto', ll:[-29.9978288,-51.1944316] }, // Hotel Intercity Aeroporto Porto Alegre (Google Places)
+   { trecho:'pestana', ll:[-25.4371311,-49.2796255] }, // Pestana Curitiba — único Pestana nos dados (Google Places)
+   { trecho:'grand mercure curitiba rayon', ll:[-25.4346099,-49.276542] }, // Grand Mercure Curitiba Rayon (Google Places)
+   { trecho:'innside itaim', ll:[-23.582688,-46.678101] } // "HOTEL INNSIDE iTAIM" = INNSiDE by Meliá São Paulo Itaim
   ];
   const tem = (txt, trecho) => (' '+norm(txt)+' ').includes(' '+trecho+' ');
   const verificado = p => { const r = VERIFICADOS.find(v => tem(p.local, v.nome) && v.end.every(t => tem(p.endereco, t))); return r ? r.ll : null; };
