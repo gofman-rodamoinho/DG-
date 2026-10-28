@@ -786,6 +786,107 @@ body:not(.is-staff) [data-act="pdf-dia"]{display:none!important;}
 .cal-day.show .cal-ev:first-of-type{margin-top:auto;}
 .cal-day.show .cal-ev:last-of-type{margin-bottom:auto;}
 </style>
+<style id="mv-visual-v172">
+/* ===== v172 (Daniel, 28/10) — visual minimalista escuro, vidro fumê. Só apresentação: dados, regras e funções iguais ===== */
+:root:root:root{
+  --bg:#0a0c10; --panel:rgba(23,26,32,.66); --panel-raised:rgba(36,40,49,.74); --hairline:rgba(255,255,255,.085);
+  --text:#eef0f4; --text-dim:#a7adb9; --text-faint:#767d8a;
+  --blue:#b6cce6; --blue-dim:rgba(182,204,230,.13);
+  --amber:#e4b56f; --amber-dim:rgba(228,181,111,.14);
+  --green:#8fcca8; --green-dim:rgba(143,204,168,.13);
+  --red:#ea998e; --red-dim:rgba(234,153,142,.14);
+  --c-banda:#a9c3e3; --c-ballet:#d8abc4; --c-crew:#ddbb8c; --c-art:#9ecbbb; --c-dj:#bab0dd;
+  --radius-s:12px; --radius-m:20px;
+  --shadow:0 14px 34px -16px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.045);
+  --glass:blur(18px) saturate(140%);
+  --mv-topo:calc(env(safe-area-inset-top,0px) + 84px);
+  color-scheme:dark;
+}
+html{background:#0a0c10;scroll-padding-top:var(--mv-topo);}   /* foco e rolagem automática param abaixo da navbar */
+body{background:
+  radial-gradient(1100px 620px at 6% -10%, rgba(140,160,200,.13), transparent 62%),
+  radial-gradient(900px 560px at 110% 2%, rgba(212,172,130,.07), transparent 60%),
+  radial-gradient(900px 640px at 50% 118%, rgba(120,140,175,.07), transparent 60%), #0a0c10;
+  background-attachment:fixed;}
+.wrap{padding-top:var(--mv-topo)!important;}
+#cronoView,.crono-form,.panel,#agendaCal{scroll-margin-top:var(--mv-topo);}
+/* superfícies de vidro: translúcidas, cantos arredondados, sombra discreta */
+.panel,.cal-box,.cal-item,.crono-form,.batch-panel,.email-preview,.leg-card,.hotel-card,.voo-card,.agenda-shows,.dir-card,.slot-add,.slot-form,.crono-bar2 .bar2-btn,.bar2-sel{
+  -webkit-backdrop-filter:var(--glass); backdrop-filter:var(--glass);}
+.panel,.cal-box,.cal-item,.crono-form,.batch-panel,.agenda-shows{border:1px solid var(--hairline);box-shadow:var(--shadow);}
+.leg-card,.hotel-card,.voo-card,.dir-card{border-color:var(--hairline);}
+.folder-tab,#mvBack,.btn-batch-toggle,.btn-pdf,.chip,.crono-day-btn{border-radius:999px!important;}
+.folder-tab,#mvBack,.btn-batch-toggle,.crono-day-btn{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);background:var(--panel);}
+.btn,.btn-send{border-radius:999px;}
+input,select,textarea{border-radius:var(--radius-s);}
+/* listas que abrem por cima do conteúdo: quase opacas para a leitura não misturar com o fundo */
+.aero-lista,.lg-lista,.cal-ficha{background:rgba(18,21,27,.97)!important;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);}
+.cal-modal{background:rgba(5,7,10,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.install-bar{background:rgba(18,21,27,.88);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);}
+#viewSwitch{display:none!important;}   /* a troca de seção agora é a navbar fixa (os botões continuam no código) */
+
+/* ---- navbar fixa no topo, em cápsula ---- */
+.mv-nav{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:0;right:0;z-index:70;display:flex;justify-content:center;
+  padding:0 max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px));pointer-events:none;}
+.mv-nav-in{pointer-events:auto;position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;width:100%;max-width:660px;padding:5px;border-radius:999px;
+  background:rgba(16,19,25,.78);-webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%);
+  border:1px solid rgba(255,255,255,.09);box-shadow:0 16px 40px -16px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.06);}
+.mv-nav-pill{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:999px;background:rgba(255,255,255,.11);opacity:0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09), 0 6px 18px -8px rgba(0,0,0,.6);
+  transition:transform .4s cubic-bezier(.2,.8,.2,1), width .4s cubic-bezier(.2,.8,.2,1), opacity .2s;}
+.mv-nav button{position:relative;z-index:1;min-width:0;min-height:46px;border:0;background:transparent;color:var(--text-dim);cursor:pointer;border-radius:999px;
+  font-family:var(--font-display);font-size:14px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;line-height:1.1;padding:6px 8px;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0 .35em;text-align:center;transition:color .2s;}
+.mv-nav button:hover{color:var(--text);}
+.mv-nav button[aria-current="page"]{color:var(--text);}
+.mv-nav button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px;}
+.mv-nav button[disabled]{opacity:.35;cursor:not-allowed;}
+@media (max-width:560px){
+  .mv-nav-in{max-width:none;}
+  .mv-nav button{font-size:13.5px;letter-spacing:.2px;text-transform:none;padding:4px 2px;flex-direction:column;}
+}
+
+/* ---- barra do cronograma: Equipe (lista suspensa) + Informações do evento ---- */
+.crono-bar2{display:flex;gap:8px;margin:2px 0 4px;flex-wrap:wrap;}
+.crono-bar2 > *,.crono-bar2 > .bar2-btn.bar2-btn{flex:1 1 220px;min-width:0;}
+.bar2-sel{display:flex;flex-direction:column;gap:4px;padding:8px 12px;border:1px solid var(--hairline);border-radius:var(--radius-m);background:var(--panel);}
+.bar2-sel .b2-t{font-family:var(--font-display);font-size:12px;letter-spacing:.8px;text-transform:uppercase;font-weight:600;color:var(--text);}
+.bar2-sel select{width:100%;min-height:44px;font:inherit;font-size:16px;color:var(--text);background:rgba(255,255,255,.05);border:1px solid var(--hairline);padding:8px 10px;cursor:pointer;}
+.crono-bar2 .bar2-btn{min-height:44px;}
+
+/* ---- painel "Informações do evento" ---- */
+.mv-info-modal{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;
+  padding:calc(env(safe-area-inset-top,0px) + 20px) max(14px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 24px) max(14px,env(safe-area-inset-left,0px));
+  background:rgba(5,7,10,.58);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+.mv-info-card{width:100%;max-width:640px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:rgba(20,23,29,.86);
+  -webkit-backdrop-filter:blur(26px) saturate(150%);backdrop-filter:blur(26px) saturate(150%);box-shadow:0 30px 70px -24px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.06);
+  padding:18px 18px 20px;display:flex;flex-direction:column;gap:14px;}
+.mv-info-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.mv-info-head h2{margin:2px 0 0;font-family:var(--font-display);font-size:22px;font-weight:600;letter-spacing:.4px;text-wrap:balance;}
+.mv-info-x{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:1px solid var(--hairline);background:rgba(255,255,255,.05);color:var(--text);font-size:22px;line-height:1;cursor:pointer;}
+.mv-info-x:hover{border-color:var(--blue);}
+.mv-info-body{display:flex;flex-direction:column;gap:14px;}
+.mv-info-body .dir-sec .btn{align-self:flex-start;min-height:44px;}
+.mv-info-nota{font-size:12px;color:var(--text-faint);}
+body.mv-info-open{overflow:hidden;}
+
+/* ---- notas do dia (leitura) ---- */
+.dia-notas.leitura .dn-txt{white-space:normal;font-size:14px;line-height:1.5;color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--hairline);border-radius:var(--radius-s);padding:9px 12px;overflow-wrap:anywhere;}
+.dia-notas .dn-l small{text-transform:none;letter-spacing:normal;margin-left:6px;color:var(--text-faint);}
+
+/* ---- entrada leve dos cartões (só ao trocar de tela, compromisso ou dia) ---- */
+@keyframes mvIn{from{opacity:0;transform:translateY(10px) scale(.985);}to{opacity:1;transform:none;}}
+html.mv-entrando :is(.panel,.cal-box,.cal-item,.slot,.prow,.leg-card,.hotel-card,.crono-bar2,.crono-days,.dir-card){animation:mvIn .46s cubic-bezier(.2,.7,.2,1) both;}
+html.mv-entrando :is(.panel,.cal-item,.slot,.prow,.leg-card,.hotel-card,.dir-card):nth-child(2){animation-delay:.04s;}
+html.mv-entrando :is(.panel,.cal-item,.slot,.prow,.leg-card,.hotel-card,.dir-card):nth-child(3){animation-delay:.08s;}
+html.mv-entrando :is(.panel,.cal-item,.slot,.prow,.leg-card,.hotel-card,.dir-card):nth-child(4){animation-delay:.12s;}
+html.mv-entrando :is(.panel,.cal-item,.slot,.prow,.leg-card,.hotel-card,.dir-card):nth-child(5){animation-delay:.16s;}
+html.mv-entrando :is(.panel,.cal-item,.slot,.prow,.leg-card,.hotel-card,.dir-card):nth-child(n+6){animation-delay:.2s;}
+@media (prefers-reduced-motion: reduce){
+  html.mv-entrando *{animation:none!important;}
+  .mv-nav-pill,.mv-nav button{transition:none!important;}
+}
+</style>
 </head>
 <body>
 <script>
@@ -3607,38 +3708,93 @@ a.dir-nome:hover{text-decoration:underline;}
     const fmt = set => { const l = [...set].sort((a,b) => chave(a).localeCompare(chave(b))); return !l.length ? '' : (l.length===1 ? l[0] : l[0]+' a '+l[l.length-1]+' (varia por pessoa: veja sua ficha)'); };
     return { ci:fmt(ins), co:fmt(outs) };
   }
-  function diretorioHtml(){
-    const g = geral || {}; const v = g.venue || {};
-    const vazio = t => '<span class="dir-v vazio">'+esc(t)+'</span>';
-    const linha = (k, val) => '<div class="dir-l"><span class="dir-k">'+k+'</span>'+val+'</div>';
-    const tel = linha('📞 Telefone', vazio('a confirmar'));
-    const nome = p => { const lk = urlMapa(p.endereco, p.mapa) || ((p.local) ? 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.local) : '');
-      return lk ? '<a class="dir-nome" href="'+esc(lk)+'" target="_blank" rel="noopener">'+esc(p.local||p.endereco)+' <span aria-hidden="true">↗</span></a>' : '<span class="dir-nome">'+esc(p.local||p.endereco)+'</span>'; };
-    const end = p => { const e = enderecoHtml(p.endereco, p.mapa); return linha('Endereço', e ? '<span class="dir-v">'+e+'</span>' : vazio('a confirmar')); };
-    const links = p => { const cc = comoChegar(p.endereco, p.mapa, p.local), u = uberDe(p); return (cc||u) ? '<span class="maplinks">'+cc+u+'</span>' : ''; };
-    let h = '<div class="panel dir-painel" id="dirPainel">';
-    h += '<section class="dir-sec" aria-label="Venue"><div class="dir-gt">🎤 Venue</div>';
-    h += (v.local || v.endereco) ? '<div class="dir-card">'+nome(v)+end(v)+tel+links(v)+'</div>' : '<div class="dir-card"><span class="dir-nome vazio">Venue a confirmar</span>'+tel+'</div>';
-    h += '</section>';
-    const hs = hoteisDiretorio(equipeAba);
-    h += '<section class="dir-sec" aria-label="Hotel"><div class="dir-gt">🏨 '+(hs.length>1?'Hotéis':'Hotel')+' · Equipe '+equipeAba+'</div>';
-    if(!hs.length) h += '<div class="dir-card"><span class="dir-nome vazio">Hotel a confirmar</span>'+tel+linha('🛎️ Check-in', vazio('a confirmar'))+linha('🧳 Check-out', vazio('a confirmar'))+'</div>';
+  // ---- v172: "Informações do evento" = Dados gerais (só o dono, como antes) + venue + hotéis + arquivos ----
+  // Só leitura: abrir ou fechar não grava nada. Editar continua pelo formulário de dados gerais de sempre.
+  const dirVazio = t => '<span class="dir-v vazio">'+esc(t)+'</span>';
+  const dirLinha = (k, val) => '<div class="dir-l"><span class="dir-k">'+k+'</span>'+val+'</div>';
+  const dirTel = t => dirLinha('📞 Telefone', t ? '<span class="dir-v">'+esc(t)+'</span>' : dirVazio('a confirmar'));
+  function dirNome(p){ const lk = urlMapa(p.endereco, p.mapa) || (p.local ? 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.local) : '');
+    return lk ? '<a class="dir-nome" href="'+esc(lk)+'" target="_blank" rel="noopener">'+esc(p.local||p.endereco)+' <span aria-hidden="true">↗</span></a>' : '<span class="dir-nome">'+esc(p.local||p.endereco)+'</span>'; }
+  function dirEnd(p){ const e = enderecoHtml(p.endereco, p.mapa); return dirLinha('Endereço', e ? '<span class="dir-v">'+e+'</span>' : dirVazio('a confirmar')); }
+  function dirLinks(p){ const cc = comoChegar(p.endereco, p.mapa, p.local), u = uberDe(p); return (cc||u) ? '<span class="maplinks">'+cc+u+'</span>' : ''; }
+  function notasFonte(){
+    if(typeof docNotas!=='undefined' && docNotas) return notasRaw || {};
+    const r = RETRATO['cronograma/notas-dia']; return (r && r.notas && typeof r.notas==='object') ? r.notas : {};
+  }
+  function notasLeitura(t){ return String(t||'').trim() ? '<div class="dia-notas leitura"><div class="dn-l">📝 Notas do dia</div><div class="dn-txt">'+esc(t).replace(/\n/g,'<br>')+'</div></div>' : ''; }
+  function notasDiaHtml(dia){ if(!dia) return ''; return notasLeitura(String((notasFonte()[DOC_PATH+'|'+dia.id]||{}).texto||'')); }
+  function blocoVenue(){
+    const v = (geral && geral.venue) || {};
+    return '<section class="dir-sec" aria-label="Venue"><div class="dir-gt">🎤 Venue</div>'
+      + ((v.local || v.endereco) ? '<div class="dir-card">'+dirNome(v)+dirEnd(v)+dirTel(v.telefone)+dirLinks(v)+'</div>' : '<div class="dir-card"><span class="dir-nome vazio">Venue a confirmar</span>'+dirTel('')+'</div>')
+      + '</section>';
+  }
+  function blocoHoteis(eq){
+    const hs = hoteisDiretorio(eq);
+    let h = '<section class="dir-sec" aria-label="Hotel Equipe '+eq+'"><div class="dir-gt">🏨 '+(hs.length>1?'Hotéis':'Hotel')+' · Equipe '+eq+'</div>';
+    if(!hs.length) h += '<div class="dir-card"><span class="dir-nome vazio">Hotel a confirmar</span>'+dirTel('')+dirLinha('🛎️ Check-in', dirVazio('a confirmar'))+dirLinha('🧳 Check-out', dirVazio('a confirmar'))+'</div>';
     hs.forEach(x => {
       const per = String(x.periodo||''), usaPer = x.manual || x.periodoEditado;
-      const dt = usaPer ? {ci:'', co:''} : datasHotel(equipeAba, (x.original && x.original.local) || x.local), ci = dt.ci, co = dt.co;
-      const telH = x.telefone ? linha('📞 Telefone', '<span class="dir-v">'+esc(x.telefone)+'</span>') : tel;
-      h += '<div class="dir-card">'+nome(x)+(x.pendente?'<span class="pend">a confirmar</span>':'')+end(x)+telH+
-        (usaPer ? linha('🗓️ Período', per ? '<span class="dir-v">'+esc(per)+'</span>' : vazio('a confirmar'))
-                  : linha('🛎️ Check-in', ci ? '<span class="dir-v">'+esc(ci)+'</span>' : vazio('a confirmar'))+linha('🧳 Check-out', co ? '<span class="dir-v">'+esc(co)+'</span>' : vazio('a confirmar')))+
-        links(x)+'</div>';
+      const dt = usaPer ? {ci:'', co:''} : datasHotel(eq, (x.original && x.original.local) || x.local);
+      h += '<div class="dir-card">'+dirNome(x)+(x.pendente?'<span class="pend">a confirmar</span>':'')+dirEnd(x)+dirTel(x.telefone)+
+        (usaPer ? dirLinha('🗓️ Período', per ? '<span class="dir-v">'+esc(per)+'</span>' : dirVazio('a confirmar'))
+                : dirLinha('🛎️ Check-in', dt.ci ? '<span class="dir-v">'+esc(dt.ci)+'</span>' : dirVazio('a confirmar'))+dirLinha('🧳 Check-out', dt.co ? '<span class="dir-v">'+esc(dt.co)+'</span>' : dirVazio('a confirmar')))+
+        dirLinks(x)+'</div>';
     });
-    h += '</section>';
+    return h + '</section>';
+  }
+  function blocoArquivos(){
     const arq = arquivosDiretorio();
-    h += '<section class="dir-sec" aria-label="Arquivos"><div class="dir-gt">📎 Arquivos</div>';
-    h += arq.length ? '<div class="dir-card dir-arqs">'+arq.map(a => '<a class="pdf-link" href="'+esc(a.url)+'" target="_blank" rel="noopener">'+(a.interno?'🔒 ':'')+esc(a.titulo)+'</a>').join('')+'</div>'
-                    : '<div class="dir-card"><span class="dir-v vazio">Nenhum arquivo anexado a este compromisso ainda.</span></div>';
-    h += '</section></div>';
-    return h;
+    return '<section class="dir-sec" aria-label="Arquivos"><div class="dir-gt">📎 Arquivos</div>'
+      + (arq.length ? '<div class="dir-card dir-arqs">'+arq.map(a => '<a class="pdf-link" href="'+esc(a.url)+'" target="_blank" rel="noopener">'+(a.interno?'🔒 ':'')+esc(a.titulo)+'</a>').join('')+'</div>'
+                    : '<div class="dir-card"><span class="dir-v vazio">Nenhum arquivo anexado a este compromisso ainda.</span></div>')
+      + '</section>';
+  }
+  function blocoGeral(){   // só o dono (era o card "Dados gerais do compromisso")
+    const g = geral || {}, sh = g.show || {};
+    const per = g.inicio ? fmtData(g.inicio)+(g.fim && g.fim!==g.inicio ? ' – '+fmtData(g.fim) : '') : '';
+    const tem = !!(g.inicio || (g.venue && g.venue.local) || (sh && sh.hora));
+    return '<section class="dir-sec" aria-label="Dados gerais"><div class="dir-gt">📋 Dados gerais · vale para B e A</div><div class="dir-card">'
+      + dirLinha('🗓️ Período', per ? '<span class="dir-v">'+esc(per)+'</span>' : dirVazio('a preencher'))
+      + dirLinha('📍 Cidade', g.cidade ? '<span class="dir-v">'+esc(g.cidade)+'</span>' : dirVazio('a preencher'))
+      + dirLinha('⭐ Show', (sh.data && sh.hora) ? '<span class="dir-v">'+esc(fmtData(sh.data))+' · '+esc(sh.hora)+(sh.fim?' – '+esc(sh.fim):'')+'</span>' : dirVazio('a preencher'))
+      + '<button type="button" class="btn" data-info-geral>✎ '+(tem?'Editar':'Preencher')+' dados gerais</button>'
+      + '<div class="mv-info-nota">Venue, showtime e hotéis da equipe (incluir, excluir, corrigir) são editados nesse formulário.</div></div></section>';
+  }
+  function infoHtml(){
+    const wk = (window.__mv && window.__mv.WEEKS && window.__mv.WEEKS[window.__mvWeek]) || {};
+    let h = '<div class="mv-info-head"><div><div class="eyebrow">Informações do evento</div><h2>'+esc(wk.label||'')+'</h2></div>'
+      + '<button type="button" class="mv-info-x" data-info-fechar aria-label="Fechar">×</button></div><div class="mv-info-body">';
+    if(souDono) h += blocoGeral();
+    h += blocoVenue();
+    h += souDono ? blocoHoteis('B') + blocoHoteis('A') : blocoHoteis(equipeAba);   // o dono vê as duas listas, como no card antigo
+    h += blocoArquivos();
+    return h + '</div>';
+  }
+  let infoEl = null, infoVolta = null;
+  function fecharInfo(){ if(!infoEl) return; infoEl.remove(); infoEl = null; document.body.classList.remove('mv-info-open'); if(infoVolta && infoVolta.isConnected) infoVolta.focus({preventScroll:true}); infoVolta = null; }
+  function abrirInfo(){
+    fecharInfo(); infoVolta = document.activeElement;
+    infoEl = document.createElement('div'); infoEl.className = 'mv-info-modal'; infoEl.setAttribute('role','dialog'); infoEl.setAttribute('aria-modal','true'); infoEl.setAttribute('aria-label','Informações do evento');
+    infoEl.innerHTML = '<div class="mv-info-card">'+infoHtml()+'</div>';
+    document.body.appendChild(infoEl); document.body.classList.add('mv-info-open');
+    infoEl.addEventListener('click', ev => {
+      if(ev.target === infoEl || ev.target.closest('[data-info-fechar]')){ fecharInfo(); return; }
+      if(ev.target.closest('[data-info-geral]')){ fecharInfo(); acao('geral'); }
+    });
+    const x = infoEl.querySelector('[data-info-fechar]'); if(x) x.focus({preventScroll:true});
+  }
+  document.addEventListener('keydown', ev => { if(ev.key==='Escape' && infoEl){ ev.preventDefault(); fecharInfo(); } });
+  window.addEventListener('mv-week', fecharInfo);
+  function barraEvento(temDias){
+    const info = souDono || temDias;                       // equipe: como antes, só quando o cronograma já tem dias
+    const eqSel = equipeAba==='B' && !editando && temDias;  // mesmas equipes e o mesmo filtro de antes
+    if(!info && !eqSel) return '';
+    let h = '<div class="crono-bar2" role="group" aria-label="Equipe e informações do evento">';
+    if(eqSel) h += '<label class="bar2-sel"><span class="b2-t">👥 Equipe</span><select id="equipeSel">'
+      + GRUPOS.map(g => '<option value="'+g[0]+'"'+(g[0]===grupo?' selected':'')+'>'+esc(g[0]==='TODOS'?'Toda a Equipe B':g[1])+'</option>').join('') + '</select></label>';
+    if(info) h += '<button type="button" class="bar2-btn" data-info-abrir aria-haspopup="dialog"><span class="b2-t">ℹ️ Informações do evento</span><span class="b2-v">'+(souDono?'Dados gerais · venue · hotéis · arquivos':'Venue · hotel · arquivos')+'</span></button>';
+    return h + '</div>';
   }
   function caixaConfirmar(texto){
     return '<div class="crono-confirm"><span>'+texto+'</span><div class="cf-actions"><button class="btn-del" type="button" data-act="sim-excluir">Excluir</button><button class="btn-cancel-email" type="button" data-act="nao-excluir">Cancelar</button></div></div>';
@@ -3648,7 +3804,7 @@ a.dir-nome:hover{text-decoration:underline;}
     const now = agoraSP();
     let h = '';
     if(modoRetrato) h += '<div class="crono-note">Sem conexão com o banco agora: mostrando a última versão salva'+(RETRATO._em?' ('+esc(RETRATO._em)+')':'')+'. Recarregue a página para tentar de novo.</div>';
-    if(!(form && form.tipo==='geral')) h += cardGeral();
+    // v172: "Dados gerais" agora fica dentro de "Informações do evento" (botão na barra abaixo)
     const liberado = !!(geral && geral.inicio);
     if(podeEditar && !liberado){
       editando = false;
@@ -3658,6 +3814,7 @@ a.dir-nome:hover{text-decoration:underline;}
            (editando && !(form && form.tipo==='config') ? '<button type="button" class="btn-pdf" data-act="config">🚏 Locais de saída</button>' : '')+
            (salvando?'<span class="crono-msg">Salvando…</span>':(msg?'<span class="crono-msg">'+esc(msg)+'</span>':''))+'</div>';
     } else if(msg){ h += '<div class="crono-msg">'+esc(msg)+'</div>'; }
+    if(!(form && (form.tipo==='geral' || form.tipo==='config'))) h += barraEvento(diasOrdenados().length>0);
 
     if(form && form.tipo==='geral' && souDono){ h += formConfig('geral'); view.innerHTML = h; bind(); return; }
     if(!carregado && !semBanco){ view.innerHTML = h+'<div class="panel"><div class="crono-empty">Carregando cronograma…</div></div>'; bind(); return; }
@@ -3692,19 +3849,7 @@ a.dir-nome:hover{text-decoration:underline;}
     });
     if(editando) h += '<button type="button" class="crono-day-btn add" data-act="novo-dia"><span class="dw">Adicionar</span><span class="dd">+ Dia</span></button>';
     h += '</div>';
-    if(!editando){   // v169: "Escolher equipe" (o filtro de antes, agora dentro do botão) + "Diretório"
-      const gAt = GRUPOS.find(g=>g[0]===grupo) || GRUPOS[0];
-      h += '<div class="crono-bar2" role="group" aria-label="Equipe e diretório">';
-      if(equipeAba==='B') h += '<button type="button" class="bar2-btn'+(barra==='equipe'?' on':'')+'" data-barra="equipe" aria-expanded="'+(barra==='equipe')+'"><span class="b2-t">👥 Escolher equipe</span><span class="b2-v">'+esc(gAt[0]==='TODOS'?'Toda a Equipe B':gAt[1])+' '+(barra==='equipe'?'▴':'▾')+'</span></button>';
-      h += '<button type="button" class="bar2-btn'+(barra==='dir'?' on':'')+'" data-barra="dir" aria-expanded="'+(barra==='dir')+'"><span class="b2-t">📒 Diretório</span><span class="b2-v">Venue · hotel · arquivos '+(barra==='dir'?'▴':'▾')+'</span></button>';
-      h += '</div>';
-      if(barra==='equipe' && equipeAba==='B'){
-        h += '<div class="crono-filter bar2-painel" role="group" aria-label="Filtrar por equipe">';
-        GRUPOS.forEach(g=>{ h += '<button type="button" class="chip'+(g[0]===grupo?' active':'')+'" data-grupo="'+g[0]+'">'+g[1]+'</button>'; });
-        h += '</div>';
-      }
-      if(barra==='dir') h += diretorioHtml();
-    }
+    // v172: Equipe e Informações do evento ficam na barra do topo (barraEvento)
 
     const dia = ds.find(d=>d.id===diaSel) || ds[0];
     const filtro = (editando || equipeAba==='A') ? 'TODOS' : grupo;
@@ -3721,7 +3866,7 @@ a.dir-nome:hover{text-decoration:underline;}
     }
     const r = rotuloDia(dia.data);
     const endDia = enderecoHtml(dia.endereco, dia.mapa), cDia = comoChegar(dia.endereco, dia.mapa, dia.local);
-    h += '<div class="panel"><div class="dayhead"><div class="eyebrow">'+r.dw+' · '+r.dd+(dia.cidade?' · '+esc(dia.cidade):'')+'</div><div class="dh-title">'+esc(dia.titulo||('Dia '+(ds.indexOf(dia)+1)))+'</div>'+(dia.local?'<div class="dh-meta">'+esc(dia.local)+'</div>':'')+(endDia?'<div class="dh-meta">'+endDia+'</div>':'')+(cDia?'<span class="maplinks">'+cDia+uberDia(dia)+'</span>':'');
+    h += '<div class="panel"><div class="dayhead"><div class="eyebrow">'+r.dw+' · '+r.dd+(dia.cidade?' · '+esc(dia.cidade):'')+'</div><div class="dh-title">'+esc(dia.titulo||('Dia '+(ds.indexOf(dia)+1)))+'</div>'+notasDiaHtml(dia)+(dia.local?'<div class="dh-meta">'+esc(dia.local)+'</div>':'')+(endDia?'<div class="dh-meta">'+endDia+'</div>':'')+(cDia?'<span class="maplinks">'+cDia+uberDia(dia)+'</span>':'');
     if(ehStaff) h += '<div class="cf-actions"><button type="button" class="btn-pdf" data-act="pdf-dia" data-id="'+dia.id+'">📄 Exportar dia em PDF</button></div>';
     if(editando){
       h += '<div class="cf-actions"><button type="button" class="btn-pdf" data-act="editar-dia" data-id="'+dia.id+'">✎ Editar dia</button>'+(dia.virtual?'':'<button type="button" class="btn-pdf danger" data-act="excluir-dia" data-id="'+dia.id+'">Excluir dia</button>')+'</div>';
@@ -3812,7 +3957,8 @@ a.dir-nome:hover{text-decoration:underline;}
     view.querySelectorAll('details').forEach(dt => dt.addEventListener('toggle', ()=>{ if(!dt.open) return; view.querySelectorAll('details[open]').forEach(o => { if(o!==dt && !o.contains(dt) && !dt.contains(o)) o.open = false; }); }));
     view.querySelectorAll('[data-dia]').forEach(b=>b.onclick=()=>{ diaSel=b.dataset.dia; form=null; confirmar=null; render(); });
     view.querySelectorAll('[data-grupo]').forEach(b=>b.onclick=()=>{ grupo=b.dataset.grupo; lsSet('mv-crono-grupo',grupo); barra=null; render(); });
-    view.querySelectorAll('[data-barra]').forEach(b=>b.onclick=()=>{ barra = (barra===b.dataset.barra) ? null : b.dataset.barra; render(); });
+    view.querySelectorAll('[data-info-abrir]').forEach(b=>b.onclick=()=>abrirInfo());
+    { const es = document.getElementById('equipeSel'); if(es) es.onchange = ()=>{ grupo = es.value; lsSet('mv-crono-grupo', grupo); render(); if(window.__mvEntrar) window.__mvEntrar(); }; }
     view.querySelectorAll('[data-act]').forEach(b=>b.onclick=ev=>{ ev.preventDefault(); acao(b.dataset.act, b.dataset.id); });
     const fc = document.getElementById('fCfg');
     if(fc){
@@ -5313,6 +5459,55 @@ body.has-install-bar #mvTopo{bottom:calc(150px + env(safe-area-inset-bottom,0px)
   window.addEventListener('resize', atualizar);
   new MutationObserver(atualizar).observe(document.body, { childList:true, subtree:true });
   atualizar();
+})();
+</script>
+<script>
+/* ===== v172: navbar fixa no topo (Minha Viagem · Cronograma B · Cronograma · Calendário).
+   Não troca nenhuma regra: aciona os mesmos botões de antes (#vsViagem, #vsCrono, #vsCronoA) e a volta para a agenda (#mvBack).
+   O compromisso aberto é o mesmo de sempre (o último escolhido, ou o primeiro que a pessoa pode ver). ===== */
+(function(){
+  const body = document.body, vV = document.getElementById('vsViagem'), vB = document.getElementById('vsCrono'), vA = document.getElementById('vsCronoA'), back = document.getElementById('mvBack');
+  if(!vV || !vB || !vA || !back || document.getElementById('mvNav')) return;
+  const reduz = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const nav = document.createElement('nav'); nav.id = 'mvNav'; nav.className = 'mv-nav'; nav.setAttribute('aria-label','Seções');
+  nav.innerHTML = '<div class="mv-nav-in"><span class="mv-nav-pill" aria-hidden="true"></span>'
+    + [['viagem','Minha','Viagem'],['cronoB','Cronograma','B'],['cronoA','Cronograma','A'],['cal','Calendário','']]
+      .map(x => '<button type="button" data-nav="'+x[0]+'"><span>'+x[1]+'</span>'+(x[2] ? '<span>'+x[2]+'</span>' : '')+'</button>').join('') + '</div>';
+  body.insertBefore(nav, body.firstChild);
+  let tEnt = 0;
+  const entrar = () => { if(reduz()) return; const h = document.documentElement; h.classList.remove('mv-entrando'); void h.offsetWidth; h.classList.add('mv-entrando'); clearTimeout(tEnt); tEnt = setTimeout(() => h.classList.remove('mv-entrando'), 950); };
+  window.__mvEntrar = entrar;
+  const naAgenda = () => body.classList.contains('agenda-mode');
+  const abrirAtual = () => {
+    if(!naAgenda()) return true;
+    const a = window.__mvAgenda; const lista = (a && a.lista) ? a.lista() : [];
+    const wid = lista.some(x => x.id === window.__mvWeek) ? window.__mvWeek : (lista[0] || {}).id;
+    if(!wid) return false;
+    a.abrir(wid); body.classList.remove('agenda-mode'); return true;
+  };
+  const ativo = () => {
+    let k = 'cal';
+    if(!naAgenda()) k = vB.getAttribute('aria-pressed')==='true' ? 'cronoB' : (vA.getAttribute('aria-pressed')==='true' ? 'cronoA' : 'viagem');
+    const sem = body.classList.contains('sem-liberados');
+    nav.querySelectorAll('[data-nav]').forEach(b => { if(b.dataset.nav===k) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); if(b.dataset.nav!=='cal') b.disabled = sem; });
+    const b = nav.querySelector('[data-nav="'+k+'"]'), pill = nav.querySelector('.mv-nav-pill');
+    if(b && pill && b.offsetWidth){ pill.style.width = b.offsetWidth+'px'; pill.style.transform = 'translateX('+b.offsetLeft+'px)'; pill.style.opacity = '1'; }
+  };
+  nav.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-nav]'); if(!b || b.disabled) return;
+    const k = b.dataset.nav;
+    if(k==='cal'){ if(!naAgenda()) back.click(); }
+    else { if(!abrirAtual()) return; ({ viagem:vV, cronoB:vB, cronoA:vA })[k].click(); }
+    window.scrollTo(0,0); entrar(); ativo();
+  });
+  new MutationObserver(ativo).observe(body, { attributes:true, attributeFilter:['class'] });
+  [vV, vB, vA].forEach(x => new MutationObserver(ativo).observe(x, { attributes:true, attributeFilter:['aria-pressed'] }));
+  window.addEventListener('resize', ativo);
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(ativo);
+  ativo(); requestAnimationFrame(ativo);
+  // entrada leve dos cartões ao trocar de compromisso, dia ou mês
+  document.addEventListener('click', ev => { if(ev.target.closest && ev.target.closest('.folder-tab,.cal-item[data-wid],.crono-day-btn,#mvBack,#calPrev,#calNext')) setTimeout(entrar, 0); }, true);
+  entrar();
 })();
 </script>
 </body>

@@ -13,7 +13,8 @@ Regras (fixas, para nunca vazar nada):
 """
 import json, re, sys, os, datetime
 
-NUNCA = re.compile(r'(equipe-emails|pastas-privadas|-docs$|agenda-planilha|clipe|notas-dia)')  # notas-dia: notas internas do dia (só produção)
+NUNCA = re.compile(r'(equipe-emails|pastas-privadas|-docs$|agenda-planilha|clipe)')
+# notas-dia (v172, Daniel 28/10): a equipe do evento lê as notas do dia -> só as notas de cronogramas que o app JÁ tem, nunca do clipe
 # ficha-overrides: só a parte "viagem" (ajustes de hotel/aviso feitos pelo dono, só das pastas que o app conhece)
 # e "novos" (eventos que o dono adiciona direto no calendário).
 # Os ajustes da agenda ("shows") nunca vão para o app.
@@ -42,6 +43,9 @@ def main():
     snap = json.loads(m_snap.group(2)); ret = json.loads(m_ret.group(2))
     wids = set(re.findall(r"^\s{4}(\w+): \{ ?id:", s, re.M)) | set(re.findall(r'^\s{4}(\w+): \{"id":', s, re.M))
     mudou = []
+    if 'cronograma/notas-dia' in db:
+        snap.setdefault('cronograma/notas-dia', {'notas': {}})
+        ret.setdefault('cronograma/notas-dia', {'notas': {}})
     for k in sorted(snap):
         if NUNCA.search(k) or k not in db:
             continue
@@ -57,6 +61,11 @@ def main():
                 novo['calEquipe'] = ce
             if co:  # cards ocultos só da lista "Compromissos" (o evento segue no calendário): só a chave e a data do ajuste
                 novo['cardOculto'] = {k2: {'em': (x or {}).get('em', '') if isinstance(x, dict) else ''} for k2, x in co.items()}
+        if k == 'cronograma/notas-dia':
+            conhecidos = {d for d in snap if d.startswith('cronograma/') and d != k}
+            nt = novo.get('notas') if isinstance(novo.get('notas'), dict) else {}
+            novo = {'notas': {ch: {'texto': str(x.get('texto', '')), 'em': str(x.get('em', ''))} for ch, x in nt.items()
+                              if isinstance(x, dict) and ch.split('|')[0] in conhecidos and 'clipe' not in ch.lower() and str(x.get('texto', '')).strip()}}
         if k == 'cronograma/visibilidade' and isinstance(novo.get('liberados'), dict):
             novo['liberados'] = {w: v for w, v in novo['liberados'].items() if w in wids}
         if sem_data(novo) != sem_data(snap[k]):
