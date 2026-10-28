@@ -1337,7 +1337,8 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
     const week = currentWeek();
     const teamEl = document.getElementById('teamChips');
     teamEl.innerHTML = '';
-    Object.keys(teamLabels).forEach(key => {
+    teamEl.style.display = 'none'; state.team = 'ALL';   // Daniel 28/10: nesta barra fica só a busca por nome
+    if(false) Object.keys(teamLabels).forEach(key => {
       if(key !== 'ALL' && !week.people.some(p => p.categoria === key)) return;
       const c = document.createElement('div');
       c.className = 'chip' + (state.team===key ? ' active':'');
@@ -3005,6 +3006,41 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
 
 
 
+<style>
+/* v169 (Daniel, 28/10): Escolher equipe + Diretório; notas do dia; sugestões enquanto digita */
+.crono-bar2{display:flex;gap:8px;margin:10px 0 4px;}
+.crono-bar2 .bar2-btn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border:1px solid var(--hairline);border-radius:var(--radius-m);background:var(--panel);color:var(--text);cursor:pointer;font:inherit;text-align:left;}
+.crono-bar2 .bar2-btn:hover{border-color:var(--blue);}
+.crono-bar2 .bar2-btn.on{border-color:var(--blue);background:var(--blue-dim);}
+.bar2-btn .b2-t{font-family:var(--font-display);font-size:12px;letter-spacing:.8px;text-transform:uppercase;font-weight:600;}
+.bar2-btn .b2-v{font-size:12px;color:var(--text-dim);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bar2-painel{margin:4px 0 8px;}
+.dir-painel{display:flex;flex-direction:column;gap:14px;margin:6px 0 10px;padding:12px 12px 14px;}
+.dir-sec{display:flex;flex-direction:column;gap:8px;min-width:0;}
+.dir-gt{font-family:var(--font-display);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);}
+.dir-card{border:1px solid var(--hairline);border-radius:var(--radius-s);background:var(--panel-raised);padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0;}
+.dir-nome{font-weight:600;font-size:15px;color:var(--text);text-decoration:none;overflow-wrap:anywhere;}
+a.dir-nome{color:var(--blue);}
+a.dir-nome:hover{text-decoration:underline;}
+.dir-l{display:flex;gap:10px;font-size:13px;line-height:1.4;min-width:0;}
+.dir-k{flex:0 0 102px;color:var(--text-dim);white-space:nowrap;}
+.dir-v{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;}
+.dir-v.vazio,.dir-nome.vazio{color:var(--amber);font-style:italic;font-weight:400;}
+.dir-card .pend{font-size:11px;color:var(--amber);}
+.dir-arqs{flex-direction:row;flex-wrap:wrap;gap:6px;}
+.dir-arqs .pdf-link{margin-left:0;}
+.dia-notas{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+.dia-notas .dn-l{font-family:var(--font-display);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);}
+.dia-notas .dn-l small{text-transform:none;letter-spacing:normal;font-family:inherit;margin-left:6px;color:var(--text-faint);}
+.dia-notas textarea{width:100%;box-sizing:border-box;min-height:64px;resize:vertical;background:var(--panel-raised);color:var(--text);border:1px solid var(--hairline);border-radius:var(--radius-s);padding:9px 11px;font:inherit;font-size:16px;line-height:1.45;}
+.dia-notas textarea:focus{outline:none;border-color:var(--blue);}
+.crono-tools .btn-pdf.btn-amarelo{background:#f2c230;border-color:#f2c230;color:#17110a;font-weight:600;}
+.crono-tools .btn-pdf.btn-amarelo:hover{filter:brightness(1.06);}
+.sug-wrap{position:relative;display:block;}
+.hotel-add{position:relative;}
+.sug-lista button small{display:block;font-size:13px;color:var(--text-dim);margin-top:2px;}
+.sug-lista button.sel{background:var(--blue-dim);}
+</style>
 <script>
 /* =============== CRONOGRAMA (day sheet) com editor ===============
    Dados ficam no banco do artefato: documento cronograma/casa-natura
@@ -3390,6 +3426,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   const eqDe = it => it.equipe || (((it.quem||[]).length && (it.quem||[]).every(q=>q==='ARTISTICO')) ? 'A' : 'B');
   const eqModelo = m => m.equipe || 'B';
   let grupo = lsGet('mv-crono-grupo') || 'TODOS';
+  let barra = null;   // v169: painel aberto embaixo dos dias: 'equipe' (escolher equipe) | 'dir' (diretório) | null
   if(!GRUPOS.some(g=>g[0]===grupo)) grupo='TODOS';
   let diaSel = null;
 
@@ -3518,6 +3555,68 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
         '<label>Tempo que o Maps mostrou<input type="text" id="fiDur" inputmode="numeric" placeholder="Ex.: 45 ou 1h20" value="'+esc(it.duracao!=null?fmtDur(it.duracao):'')+'"></label>'+
         '<div class="chegada" id="fiChegada"></div></fieldset>'+fim;
   }
+  // ---- Diretório do compromisso (v169, Daniel 28/10) ----
+  // Só o que já é visível para quem abre o app: venue dos dados gerais, hotéis das fichas da equipe
+  // (menos os que o dono ocultou) e documentos já anexados às fichas. Não há telefone no banco: fica "a confirmar".
+  function hoteisDiretorio(eq){
+    const ha = (geral && geral.hoteisAjuste && geral.hoteisAjuste[eq]) || {};
+    const oc = new Set((Array.isArray(ha.ocultos) ? ha.ocultos : []).map(o => normLocal(o && (o.chave || o.nome || o))));
+    const base = hoteisEquipe(eq).filter(h => !oc.has(normLocal(h.local)));
+    if(!ehStaff) return base;   // hotel incluído à mão pelo dono: por enquanto só a produção vê aqui
+    const man = (Array.isArray(ha.incluidos) ? ha.incluidos : []).filter(x => x && x.local && !base.some(b => String(b.local).toLowerCase() === String(x.local).toLowerCase()))
+      .map(x => ({ local:String(x.local), endereco:String(x.endereco||''), mapa:'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(String(x.local)+(x.endereco?', '+x.endereco:'')), periodo:String(x.periodo||''), manual:true }));
+    return base.concat(man);
+  }
+  function arquivosDiretorio(){
+    const out = [], vistos = new Set();
+    const add = (titulo, url, interno) => { url = String(url||'').trim(); if(!/^https:\/\//.test(url) || vistos.has(url)) return; vistos.add(url); out.push({ titulo:String(titulo||'📄 Documento'), url, interno:!!interno }); };
+    try{ const w = window.__mv && window.__mv.WEEKS[window.__mvWeek || 'semana1'];
+      ((w && w.people) || []).forEach(p => (Array.isArray(p.docs) ? p.docs : []).forEach(x => { if(x && x.pdf) add(x.titulo, x.pdf); })); }catch(e){}
+    if(ehStaff && window.__mvWeek==='grammy') (window.__mvStaffDocs || []).forEach(x => { if(x && x.pdf) add(x.titulo, x.pdf, true); });   // documentos internos: só quem já vê
+    return out;
+  }
+  // check-in/check-out do hotel tirados das fichas da equipe; se variam por pessoa, mostra o intervalo e avisa
+  function datasHotel(eq, nome){
+    const ok = t => { t = String(t||'').trim(); return (t && !/a confirmar|^TBC$/i.test(t)) ? t : ''; };
+    const chave = t => { const m = String(t).match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/); return m ? (m[3]||'').padStart(4,'0')+m[2].padStart(2,'0')+m[1].padStart(2,'0') : String(t); };
+    const ins = new Set(), outs = new Set(), alvo = String(nome||'').trim().toLowerCase();
+    try{ const w = window.__mv && window.__mv.WEEKS[window.__mvWeek || 'semana1'];
+      ((w && w.people) || []).filter(p => p.equipe===eq).forEach(p => (p.hotel_stays||[]).forEach(h => {
+        if(String(h.hotel||'').trim().toLowerCase()!==alvo) return; const a = ok(h.checkin), b = ok(h.checkout); if(a) ins.add(a); if(b) outs.add(b); })); }catch(e){}
+    const fmt = set => { const l = [...set].sort((a,b) => chave(a).localeCompare(chave(b))); return !l.length ? '' : (l.length===1 ? l[0] : l[0]+' a '+l[l.length-1]+' (varia por pessoa: veja sua ficha)'); };
+    return { ci:fmt(ins), co:fmt(outs) };
+  }
+  function diretorioHtml(){
+    const g = geral || {}; const v = g.venue || {};
+    const vazio = t => '<span class="dir-v vazio">'+esc(t)+'</span>';
+    const linha = (k, val) => '<div class="dir-l"><span class="dir-k">'+k+'</span>'+val+'</div>';
+    const tel = linha('📞 Telefone', vazio('a confirmar'));
+    const nome = p => { const lk = urlMapa(p.endereco, p.mapa) || ((p.local) ? 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.local) : '');
+      return lk ? '<a class="dir-nome" href="'+esc(lk)+'" target="_blank" rel="noopener">'+esc(p.local||p.endereco)+' <span aria-hidden="true">↗</span></a>' : '<span class="dir-nome">'+esc(p.local||p.endereco)+'</span>'; };
+    const end = p => { const e = enderecoHtml(p.endereco, p.mapa); return linha('Endereço', e ? '<span class="dir-v">'+e+'</span>' : vazio('a confirmar')); };
+    const links = p => { const cc = comoChegar(p.endereco, p.mapa, p.local), u = uberDe(p); return (cc||u) ? '<span class="maplinks">'+cc+u+'</span>' : ''; };
+    let h = '<div class="panel dir-painel" id="dirPainel">';
+    h += '<section class="dir-sec" aria-label="Venue"><div class="dir-gt">🎤 Venue</div>';
+    h += (v.local || v.endereco) ? '<div class="dir-card">'+nome(v)+end(v)+tel+links(v)+'</div>' : '<div class="dir-card"><span class="dir-nome vazio">Venue a confirmar</span>'+tel+'</div>';
+    h += '</section>';
+    const hs = hoteisDiretorio(equipeAba);
+    h += '<section class="dir-sec" aria-label="Hotel"><div class="dir-gt">🏨 '+(hs.length>1?'Hotéis':'Hotel')+' · Equipe '+equipeAba+'</div>';
+    if(!hs.length) h += '<div class="dir-card"><span class="dir-nome vazio">Hotel a confirmar</span>'+tel+linha('🛎️ Check-in', vazio('a confirmar'))+linha('🧳 Check-out', vazio('a confirmar'))+'</div>';
+    hs.forEach(x => {
+      const per = String(x.periodo||''), dt = x.manual ? {ci:'', co:''} : datasHotel(equipeAba, x.local), ci = dt.ci, co = dt.co;
+      h += '<div class="dir-card">'+nome(x)+(x.pendente?'<span class="pend">a confirmar</span>':'')+end(x)+tel+
+        (x.manual ? linha('🗓️ Período', per ? '<span class="dir-v">'+esc(per)+'</span>' : vazio('a confirmar'))
+                  : linha('🛎️ Check-in', ci ? '<span class="dir-v">'+esc(ci)+'</span>' : vazio('a confirmar'))+linha('🧳 Check-out', co ? '<span class="dir-v">'+esc(co)+'</span>' : vazio('a confirmar')))+
+        links(x)+'</div>';
+    });
+    h += '</section>';
+    const arq = arquivosDiretorio();
+    h += '<section class="dir-sec" aria-label="Arquivos"><div class="dir-gt">📎 Arquivos</div>';
+    h += arq.length ? '<div class="dir-card dir-arqs">'+arq.map(a => '<a class="pdf-link" href="'+esc(a.url)+'" target="_blank" rel="noopener">'+(a.interno?'🔒 ':'')+esc(a.titulo)+'</a>').join('')+'</div>'
+                    : '<div class="dir-card"><span class="dir-v vazio">Nenhum arquivo anexado a este compromisso ainda.</span></div>';
+    h += '</section></div>';
+    return h;
+  }
   function caixaConfirmar(texto){
     return '<div class="crono-confirm"><span>'+texto+'</span><div class="cf-actions"><button class="btn-del" type="button" data-act="sim-excluir">Excluir</button><button class="btn-cancel-email" type="button" data-act="nao-excluir">Cancelar</button></div></div>';
   }
@@ -3570,10 +3669,18 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     });
     if(editando) h += '<button type="button" class="crono-day-btn add" data-act="novo-dia"><span class="dw">Adicionar</span><span class="dd">+ Dia</span></button>';
     h += '</div>';
-    if(!editando && equipeAba==='B'){
-      h += '<div class="crono-filter" role="group" aria-label="Filtrar por equipe">';
-      GRUPOS.forEach(g=>{ h += '<button type="button" class="chip'+(g[0]===grupo?' active':'')+'" data-grupo="'+g[0]+'">'+g[1]+'</button>'; });
+    if(!editando){   // v169: "Escolher equipe" (o filtro de antes, agora dentro do botão) + "Diretório"
+      const gAt = GRUPOS.find(g=>g[0]===grupo) || GRUPOS[0];
+      h += '<div class="crono-bar2" role="group" aria-label="Equipe e diretório">';
+      if(equipeAba==='B') h += '<button type="button" class="bar2-btn'+(barra==='equipe'?' on':'')+'" data-barra="equipe" aria-expanded="'+(barra==='equipe')+'"><span class="b2-t">👥 Escolher equipe</span><span class="b2-v">'+esc(gAt[0]==='TODOS'?'Toda a Equipe B':gAt[1])+' '+(barra==='equipe'?'▴':'▾')+'</span></button>';
+      h += '<button type="button" class="bar2-btn'+(barra==='dir'?' on':'')+'" data-barra="dir" aria-expanded="'+(barra==='dir')+'"><span class="b2-t">📒 Diretório</span><span class="b2-v">Venue · hotel · arquivos '+(barra==='dir'?'▴':'▾')+'</span></button>';
       h += '</div>';
+      if(barra==='equipe' && equipeAba==='B'){
+        h += '<div class="crono-filter bar2-painel" role="group" aria-label="Filtrar por equipe">';
+        GRUPOS.forEach(g=>{ h += '<button type="button" class="chip'+(g[0]===grupo?' active':'')+'" data-grupo="'+g[0]+'">'+g[1]+'</button>'; });
+        h += '</div>';
+      }
+      if(barra==='dir') h += diretorioHtml();
     }
 
     const dia = ds.find(d=>d.id===diaSel) || ds[0];
@@ -3681,7 +3788,8 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     const gc = view.querySelector('.geral-card'); if(gc) gc.addEventListener('toggle', ()=>{ geralAberto = gc.open; });
     view.querySelectorAll('details').forEach(dt => dt.addEventListener('toggle', ()=>{ if(!dt.open) return; view.querySelectorAll('details[open]').forEach(o => { if(o!==dt && !o.contains(dt) && !dt.contains(o)) o.open = false; }); }));
     view.querySelectorAll('[data-dia]').forEach(b=>b.onclick=()=>{ diaSel=b.dataset.dia; form=null; confirmar=null; render(); });
-    view.querySelectorAll('[data-grupo]').forEach(b=>b.onclick=()=>{ grupo=b.dataset.grupo; lsSet('mv-crono-grupo',grupo); render(); });
+    view.querySelectorAll('[data-grupo]').forEach(b=>b.onclick=()=>{ grupo=b.dataset.grupo; lsSet('mv-crono-grupo',grupo); barra=null; render(); });
+    view.querySelectorAll('[data-barra]').forEach(b=>b.onclick=()=>{ barra = (barra===b.dataset.barra) ? null : b.dataset.barra; render(); });
     view.querySelectorAll('[data-act]').forEach(b=>b.onclick=ev=>{ ev.preventDefault(); acao(b.dataset.act, b.dataset.id); });
     const fc = document.getElementById('fCfg');
     if(fc){

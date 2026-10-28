@@ -13,7 +13,7 @@ Regras (fixas, para nunca vazar nada):
 """
 import json, re, sys, os, datetime
 
-NUNCA = re.compile(r'(equipe-emails|pastas-privadas|-docs$|agenda-planilha|clipe)')
+NUNCA = re.compile(r'(equipe-emails|pastas-privadas|-docs$|agenda-planilha|clipe|notas-dia)')  # notas-dia: notas internas do dia (só produção)
 # ficha-overrides: só a parte "viagem" (ajustes de hotel/aviso feitos pelo dono, só das pastas que o app conhece)
 # e "novos" (eventos que o dono adiciona direto no calendário).
 # Os ajustes da agenda ("shows") nunca vão para o app.
