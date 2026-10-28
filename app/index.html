@@ -943,7 +943,8 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
     { nome:'melia jardim europa',    end:['joao cachoeira','107'],             ll:[-23.58114,-46.67898] },   // melia.com + OSM (a variante "Alameda Campinas" fica sem Uber)
     { nome:'mgm grand garden arena', end:['3799'],                             ll:[36.10481,-115.16859] },   // Wikipedia + OSM (arena; não usa o pino do hotel)
     { nome:'mgm grand hotel',        end:['3799','las vegas'],                 ll:[36.1028,-115.1694] },     // Wikipedia + OSM (hotel)
-    { nome:'ibis',                   end:['abelardo bueno','1511'],            ll:[-22.9738782,-43.3717781] } // ibis RJ Parque Olímpico (Accor 8176), salvo como "Ibis Metropolitano"
+    { nome:'ibis',                   end:['abelardo bueno','1511'],            ll:[-22.9738782,-43.3717781] }, // ibis RJ Parque Olímpico (Accor 8176), salvo como "Ibis Metropolitano"
+    { nome:'galeao',                 end:['20 de janeiro','galeao','21941'],   ll:[-22.81,-43.2506] }          // Galeão sem sigla salva (itens antigos): mesma coordenada oficial do GIG
   ];
   const tem = (txt, trecho) => (' '+norm(txt)+' ').includes(' '+trecho+' ');
   const verificado = p => { const r = VERIFICADOS.find(v => tem(p.local, v.nome) && v.end.every(t => tem(p.endereco, t))); return r ? r.ll : null; };
@@ -977,7 +978,9 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
     if(!u) return '<a class="'+k+' uber-off" role="link" aria-disabled="true" title="Uber indisponível: local sem coordenadas confirmadas" aria-label="Uber indisponível: local sem coordenadas confirmadas">Uber</a>';
     return '<a class="'+k+'" href="'+esc(u)+'" target="_blank" rel="noopener" aria-label="'+esc('Pedir Uber até '+nome+' (abre o app, não pede a corrida)')+'">Uber</a>';
   }
-  window.__mvUber = { coord, link, html };
+  // trecho de nome da lista de verificados (usado só para herdar endereço no cabeçalho do dia, ver cronograma)
+  const trecho = local => { const r = VERIFICADOS.find(v => tem(local, v.nome)); return r ? r.nome : null; };
+  window.__mvUber = { coord, link, html, trecho, contem: tem };
 })();
 </script>
 <script>
@@ -3004,6 +3007,18 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   }
   const comCidade = nome => { nome = String(nome||'').trim(); if(!nome) return ''; const c = (cfg() && cfg().cidade) || ''; return c && !nome.toLowerCase().includes(c.toLowerCase()) ? nome+', '+c : nome; };
   const uberDe = (p, cls) => (window.__mvUber ? window.__mvUber.html(p, cls||'') : '');   // botão Uber ao lado do "Como chegar"
+  // cabeçalho do dia sem endereço: herda o endereço SÓ para o Uber (nada é gravado) quando, no mesmo cronograma/evento,
+  // todos os outros registros com o mesmo trecho de nome dos verificados têm exatamente o mesmo endereço. Zero ou endereços diferentes: sem herança.
+  function uberDia(dia){
+    const base = {local:dia.local, endereco:dia.endereco, mapa:dia.mapa, iata:dia.iata, lat:dia.lat, lng:dia.lng};
+    const U = window.__mvUber; if(!U || !U.trecho || String(dia.endereco||'').trim()) return uberDe(base);
+    const t = U.trecho(dia.local); if(!t) return uberDe(base);
+    const ends = new Set(); let semEnd = false;
+    const ver = x => { if(!x || x===dia || !U.contem(x.local, t)) return; const e = String(x.endereco||'').trim(); if(e) ends.add(e); else semEnd = true; };
+    ((dados && dados.dias) || []).forEach(d => { ver(d); (d.itens||[]).forEach(it => { if(it.tipo==='deslocamento'){ ver(it.partida); (it.paradas||[]).forEach(ver); ver(it.destino); } else ver(it); }); });
+    if(geral && geral.venue) ver(geral.venue);
+    return (ends.size===1 && !semEnd) ? uberDe(Object.assign({}, base, {endereco: [...ends][0]})) : uberDe(base);
+  }
   function comoChegar(end, link, nome){
     const n = normEnd(end, link); const alvo = n.end || comCidade(nome); if(!alvo) return '';
     return '<a href="https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(alvo)+'" target="_blank" rel="noopener">🧭 Como chegar</a>';
@@ -3539,7 +3554,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     }
     const r = rotuloDia(dia.data);
     const endDia = enderecoHtml(dia.endereco, dia.mapa), cDia = comoChegar(dia.endereco, dia.mapa, dia.local);
-    h += '<div class="panel"><div class="dayhead"><div class="eyebrow">'+r.dw+' · '+r.dd+(dia.cidade?' · '+esc(dia.cidade):'')+'</div><div class="dh-title">'+esc(dia.titulo||('Dia '+(ds.indexOf(dia)+1)))+'</div>'+(dia.local?'<div class="dh-meta">'+esc(dia.local)+'</div>':'')+(endDia?'<div class="dh-meta">'+endDia+'</div>':'')+(cDia?'<span class="maplinks">'+cDia+uberDe({local:dia.local, endereco:dia.endereco, mapa:dia.mapa, iata:dia.iata, lat:dia.lat, lng:dia.lng})+'</span>':'');
+    h += '<div class="panel"><div class="dayhead"><div class="eyebrow">'+r.dw+' · '+r.dd+(dia.cidade?' · '+esc(dia.cidade):'')+'</div><div class="dh-title">'+esc(dia.titulo||('Dia '+(ds.indexOf(dia)+1)))+'</div>'+(dia.local?'<div class="dh-meta">'+esc(dia.local)+'</div>':'')+(endDia?'<div class="dh-meta">'+endDia+'</div>':'')+(cDia?'<span class="maplinks">'+cDia+uberDia(dia)+'</span>':'');
     if(ehStaff) h += '<div class="cf-actions"><button type="button" class="btn-pdf" data-act="pdf-dia" data-id="'+dia.id+'">📄 Exportar dia em PDF</button></div>';
     if(editando){
       h += '<div class="cf-actions"><button type="button" class="btn-pdf" data-act="editar-dia" data-id="'+dia.id+'">✎ Editar dia</button>'+(dia.virtual?'':'<button type="button" class="btn-pdf danger" data-act="excluir-dia" data-id="'+dia.id+'">Excluir dia</button>')+'</div>';
