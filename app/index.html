@@ -482,6 +482,22 @@ ol.paradas li.mid .pa-n{font-weight:500;font-size:12px;}
 ol.paradas .pa-e{font-size:10.5px;color:var(--text-faint);}
 ol.paradas .maplinks{margin-top:3px;}
 .lg-pick option, .lg-pick optgroup{background:var(--panel);color:var(--text);}
+.lg-btn{display:flex;justify-content:space-between;align-items:center;text-align:left;cursor:pointer;}
+.lg-btn .lg-seta{color:var(--blue);}
+.lg-lista{margin-top:4px;border:1px solid var(--blue);border-radius:var(--radius-s);background:var(--panel);max-height:min(55vh,380px);overflow-y:auto;text-transform:none;letter-spacing:0;font-family:inherit;}
+.lg-lista[hidden]{display:none!important;}
+.lg-gt{padding:8px 12px 4px;font-family:var(--font-display);font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-faint);}
+.lg-op{display:flex;align-items:stretch;border-top:1px solid var(--hairline);}
+.lg-op button{all:unset;box-sizing:border-box;cursor:pointer;color:var(--text);font-size:16px;line-height:1.35;}
+.lg-op .lg-escolher{flex:1 1 auto;min-width:0;padding:11px 12px;overflow-wrap:anywhere;}
+.lg-op .lg-x{flex:0 0 auto;width:48px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-dim);border-left:1px solid var(--hairline);}
+.lg-op button:hover,.lg-op button:focus-visible{background:var(--blue-dim);}
+.lg-op .lg-x:hover{color:var(--red);}
+.lg-conf{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;width:100%;font-size:16px;color:var(--text);}
+.lg-conf span{flex:1 1 auto;}
+.lg-conf button{padding:8px 14px;border:1px solid var(--hairline);border-radius:var(--radius-s);font-size:15px;}
+.lg-conf .lg-sim{border-color:var(--red);color:var(--red);}
+.lg-vazio{padding:10px 12px;font-size:13px;color:var(--text-faint);text-transform:none;}
 .kind-tag.aereo{background:var(--blue-dim);color:var(--blue);}
 .voo-card{margin-top:6px;border:1px solid var(--hairline);border-radius:var(--radius-m);padding:12px 14px;background:var(--panel-raised);display:flex;flex-direction:column;gap:8px;max-width:420px;}
 .voo-rota{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;}
@@ -2971,7 +2987,11 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     return { inicio:g.inicio||'', fim:g.fim||'', cidade:g.cidade||'', venue:g.venue||{}, show:g.show||null, hoteis:hot, saidas:t.saidas||[] };
   };
   // locais já usados em qualquer item, de qualquer compromisso (documento cronograma/locais)
-  let docLocais = null, locaisUsados = [];
+  let docLocais = null, locaisUsados = [], locaisRaw = null;
+  // locais tirados da lista "Usar local salvo" pelo x (cronograma/locais → "ocultos"); comparação pelo nome normalizado.
+  // Só some da lista: venue, hotéis, saídas, itens e deslocamentos continuam como estão. Voltam se alguém salvar um item com esse local.
+  const normLocal = t => String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const ocultosLocais = () => new Set(((locaisRaw && Array.isArray(locaisRaw.ocultos)) ? locaisRaw.ocultos : []).map(o => normLocal(o && o.local)).filter(Boolean));
   function lugaresSalvos(){
     const c = cfg() || {};
     const L = [];
@@ -2986,7 +3006,8 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     }); }catch(e){}
     locaisUsados.slice().sort((a,b)=>String(a.local).localeCompare(String(b.local),'pt-BR'))
       .forEach(x=>{ const k=String(x.local||'').trim().toLowerCase(); if(k && !ja.has(k)){ ja.add(k); L.push(Object.assign({grupo:'Salvo'}, x)); } });
-    return L;
+    const oc = ocultosLocais();
+    return oc.size ? L.filter(x => !oc.has(normLocal(x.local||x.endereco))) : L;
   }
   // depois de salvar um item: guarda os locais novos (ou completa endereço/link dos que já existem)
   async function guardarLocais(item){
@@ -3005,11 +3026,31 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
         else if(!ex.mapa && p.mapa){ ex.mapa=p.mapa; mudou=true; }
       }
     });
+    const usados = new Set(pts.map(p => normLocal(p.local)).filter(Boolean));
+    const ocAntes = (locaisRaw && Array.isArray(locaisRaw.ocultos)) ? locaisRaw.ocultos : [];
+    const ocDepois = ocAntes.filter(o => !usados.has(normLocal(o && o.local)));   // salvou um item com o local: ele volta à lista
+    if(ocDepois.length !== ocAntes.length) mudou = true;
     if(!mudou) return;
-    try{ await docLocais.set({locais:lista}); locaisUsados = lista; }catch(e){}
+    const novoDoc = Object.assign({}, locaisRaw || {}, { locais:lista }); if(ocAntes.length) novoDoc.ocultos = ocDepois;
+    try{ await docLocais.set(novoDoc); locaisUsados = lista; locaisRaw = novoDoc; window.__mvAppSync && window.__mvAppSync(); }catch(e){}
   }
   // menu "usar local salvo": preenche nome, endereço e link de uma vez
   function seletorLugar(nomeId, endId){
+    const L = lugaresSalvos(); if(!L.length) return '';
+    return '<div class="lg-pick-wrap lg-box" data-nome="'+nomeId+'" data-end="'+endId+'"><span>Usar local salvo</span>'
+      + '<button type="button" class="lg-pick lg-btn" aria-expanded="false">Escolher… <span class="lg-seta" aria-hidden="true">▾</span></button>'
+      + '<div class="lg-lista" hidden></div></div>';
+  }
+  const GRUPOS_LUGAR = {Venue:'🎤 Venue',Hotel:'🏨 Hotéis',Saída:'🚏 Locais de saída',Salvo:'⭐ Locais já usados'};
+  function listaLugarHtml(box){
+    const L = lugaresSalvos(); box.__L = L; const semLocal = box.dataset.nome==='fiLocal';
+    return (semLocal ? '<div class="lg-op"><button type="button" class="lg-escolher" data-i="-1">— Sem local (ainda não sei) —</button></div>' : '')
+      + ['Venue','Hotel','Saída','Salvo'].map(gr => { const op = L.map((x,i)=>[x,i]).filter(([x])=>x.grupo===gr); if(!op.length) return '';
+        return '<div class="lg-grupo" role="group" aria-label="'+esc(GRUPOS_LUGAR[gr])+'"><div class="lg-gt">'+GRUPOS_LUGAR[gr]+'</div>'+op.map(([x,i]) =>
+          '<div class="lg-op"><button type="button" class="lg-escolher" data-i="'+i+'">'+esc(x.local||x.endereco)+'</button><button type="button" class="lg-x" data-i="'+i+'" aria-label="Excluir '+esc(x.local||x.endereco)+' da lista">×</button></div>').join('')+'</div>'; }).join('')
+      + (L.length ? '' : '<div class="lg-vazio">Nenhum local salvo.</div>');
+  }
+  function seletorLugarAntigo(nomeId, endId){
     const L = lugaresSalvos(); if(!L.length) return '';
     return '<label class="lg-pick-wrap">Usar local salvo<select class="lg-pick" data-nome="'+nomeId+'" data-end="'+endId+'"><option value="">Escolher…</option>'+(nomeId==='fiLocal'?'<option value="-1">— Sem local (ainda não sei) —</option>':'')+
       ['Venue','Hotel','Saída','Salvo'].map(gr=>{ const op = L.map((x,i)=>[x,i]).filter(([x])=>x.grupo===gr); if(!op.length) return '';
@@ -3883,6 +3924,38 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   });
   document.addEventListener('pointerdown', ev => { if(aeroAberto && !aeroAberto.box.contains(ev.target) && ev.target!==aeroAberto.inp){ if(aeroAberto.modo==='conf') aeroCancelar(); else aeroFechar(); } });
   view.addEventListener('focusout', ev => { if(aeroAberto && aeroAberto.modo!=='conf' && ev.target===aeroAberto.inp) setTimeout(()=>{ if(aeroAberto && aeroAberto.modo!=='conf' && document.activeElement!==aeroAberto.inp) aeroFechar(); }, 150); });
+  // lista própria "Usar local salvo" (com x por local): abre/fecha, escolhe, exclui só da lista
+  function lgFechar(box){ const l = box.querySelector('.lg-lista'), b = box.querySelector('.lg-btn'); if(l){ l.hidden = true; l.innerHTML = ''; } if(b) b.setAttribute('aria-expanded','false'); }
+  function lgFecharTodos(exceto){ view.querySelectorAll('.lg-box').forEach(b => { if(b!==exceto) lgFechar(b); }); }
+  view.addEventListener('click', async ev => {
+    const box = ev.target.closest && ev.target.closest('.lg-box'); if(!box) return;
+    const lista = box.querySelector('.lg-lista');
+    if(ev.target.closest('.lg-btn')){ const abrir = lista.hidden; lgFecharTodos(box); if(abrir){ lista.innerHTML = listaLugarHtml(box); lista.hidden = false; box.querySelector('.lg-btn').setAttribute('aria-expanded','true'); } else lgFechar(box); return; }
+    const esc1 = ev.target.closest('.lg-escolher');
+    if(esc1){ const i = +esc1.dataset.i; const p = i===-1 ? {local:'',endereco:'',mapa:''} : (box.__L||[])[i]; if(!p) return;
+      const set = (id,val) => { const e=document.getElementById(id); if(e){ e.value = val||''; e.dispatchEvent(new Event('input',{bubbles:true})); } };
+      set(box.dataset.end+'Link', ''); set(box.dataset.nome, p.local); set(box.dataset.end, p.endereco); if(p.mapa) set(box.dataset.end+'Link', p.mapa);
+      lgFechar(box); return; }
+    const x = ev.target.closest('.lg-x');
+    if(x){ const op = x.closest('.lg-op'); const i = +x.dataset.i;
+      op.dataset.html = op.innerHTML;
+      op.innerHTML = '<div class="lg-conf"><span>Excluir item?</span><button type="button" class="lg-nao">Cancelar</button><button type="button" class="lg-sim" data-i="'+i+'">Excluir</button></div>';
+      const n = op.querySelector('.lg-nao'); if(n) n.focus({preventScroll:true}); return; }
+    const nao = ev.target.closest('.lg-nao');
+    if(nao){ const op = nao.closest('.lg-op'); op.innerHTML = op.dataset.html || ''; delete op.dataset.html; return; }
+    const sim = ev.target.closest('.lg-sim');
+    if(sim){ const p = (box.__L||[])[+sim.dataset.i]; if(!p || !docLocais) return; sim.disabled = true; sim.textContent = 'Excluindo…';
+      const atual = (locaisRaw && Array.isArray(locaisRaw.ocultos)) ? locaisRaw.ocultos : [];
+      const nome = String(p.local||p.endereco||'').trim();
+      const ocultos = atual.filter(o => normLocal(o && o.local) !== normLocal(nome)).concat([{ local:nome, endereco:p.endereco||'', em:new Date().toISOString() }]);
+      const novoDoc = Object.assign({}, locaisRaw || {locais:locaisUsados}, { ocultos });
+      try{ await docLocais.set(novoDoc); locaisRaw = novoDoc; window.__mvAppSync && window.__mvAppSync();
+        lista.innerHTML = listaLugarHtml(box); if(!(box.__L||[]).length) lgFechar(box); }
+      catch(e){ sim.disabled = false; sim.textContent = 'Excluir'; const op = sim.closest('.lg-op'); if(op){ const m = document.createElement('div'); m.className='lg-vazio'; m.textContent = 'Não foi possível excluir agora. Nada mudou.'; op.appendChild(m); } }
+      return; }
+  });
+  view.addEventListener('keydown', ev => { if(ev.key==='Escape'){ const box = ev.target.closest && ev.target.closest('.lg-box'); if(box){ ev.preventDefault(); lgFechar(box); const b = box.querySelector('.lg-btn'); if(b) b.focus(); } } });
+  document.addEventListener('pointerdown', ev => { const box = ev.target.closest && ev.target.closest('.lg-box'); lgFecharTodos(box); });
   // menu "usar local salvo" (vale também para paradas criadas depois)
   view.addEventListener('change', ev=>{
     const sel = ev.target; if(!sel.matches || !sel.matches('select.lg-pick') || sel.value==='') return;
@@ -3950,7 +4023,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     if(!db){ if(RETRATO._em){ db = dbRetrato(); modoRetrato = true; podeEditar = false; } else { semBanco=true; podeEditar=false; if(!view.hidden) render(); return; } }
     dbHandle = db;
     docLocais = db.doc('cronograma/locais');
-    docLocais.onSnapshot(snap=>{ const d = snap.exists ? snap.data() : null; locaisUsados = d && Array.isArray(d.locais) ? JSON.parse(JSON.stringify(d.locais)) : []; }, ()=>{});
+    docLocais.onSnapshot(snap=>{ const d = snap.exists ? snap.data() : null; locaisRaw = d ? JSON.parse(JSON.stringify(d)) : null; locaisUsados = d && Array.isArray(d.locais) ? JSON.parse(JSON.stringify(d.locais)) : []; }, ()=>{});
     docModelos = db.doc('cronograma/modelos');
     docModelos.onSnapshot(snap=>{ const d = snap.exists ? snap.data() : null; modelos = d && Array.isArray(d.modelos) ? JSON.parse(JSON.stringify(d.modelos)) : []; if(!view.hidden && form && form.tipo==='escolher') render(); }, ()=>{});
     assinarGeral(DOCS[window.__mvWeek] || ("cronograma/"+window.__mvWeek));
