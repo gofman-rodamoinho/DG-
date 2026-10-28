@@ -400,6 +400,11 @@ fieldset.ponto legend{font-family:var(--font-display);font-size:11.5px;letter-sp
 @keyframes busca{to{background-position:-200% 0;}}
 @media (prefers-reduced-motion: reduce){.crono-form input.buscando{animation:none;}}
 .modelos{display:flex;flex-direction:column;gap:6px;margin-top:6px;}
+.modelos-tg{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:6px;margin-top:14px;padding:8px 0;min-height:40px;cursor:pointer;font-family:var(--font-display);font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-faint);}
+.modelos-tg:hover{color:var(--text);}
+.modelos-tg:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+.modelos-tg .seta{font-size:13px;width:12px;}
+.modelos[hidden]{display:none!important;}
 .modelo{display:flex;gap:6px;align-items:stretch;}
 .modelo-btn{flex:1 1 auto;min-width:0;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:var(--panel-raised);border:1px solid var(--hairline);border-radius:var(--radius-s);padding:10px 12px;color:var(--text);font:inherit;font-size:12.5px;cursor:pointer;}
 .modelo-btn:hover,.modelo-btn:focus-visible{border-color:var(--blue);background:var(--blue-dim);outline:none;}
@@ -443,13 +448,18 @@ fieldset.ponto.comum{border-color:var(--blue);background:var(--blue-dim);}
 .folder-tab .enc{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;margin-left:8px;color:var(--text-faint);}
 .addr-row .lupa{min-width:48px;display:inline-flex;align-items:center;justify-content:center;align-self:stretch;font-size:17px;padding:0 10px;border-color:var(--blue);}
 .addr-row{position:relative;}
-.aero-lista{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:60;background:var(--panel-raised);border:1px solid var(--blue);border-radius:var(--radius-m);max-height:min(50vh,340px);overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;flex-direction:column;}
+.aero-lista{text-transform:none;letter-spacing:normal;font-family:inherit;font-weight:400;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:60;background:var(--panel-raised);border:1px solid var(--blue);border-radius:var(--radius-m);max-height:min(50vh,340px);overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;flex-direction:column;}
 .aero-lista button{all:unset;box-sizing:border-box;display:block;width:100%;padding:12px 14px;font-size:16px;line-height:1.35;color:var(--text);cursor:pointer;border-bottom:1px solid var(--hairline);overflow-wrap:anywhere;}
 .aero-lista button:last-child{border-bottom:0;}
 .aero-lista button:hover,.aero-lista button:focus-visible{background:var(--blue-dim);}
 .aero-lista button b{font-family:var(--font-mono);font-weight:600;}
 .aero-lista .aero-nota{padding:8px 14px;font-size:13px;color:var(--text-faint);}
 .parada-row .addr-hint.aero{display:block;}
+.aero-lista .aero-conf{padding:12px 14px;font-size:16px;line-height:1.4;color:var(--text);}
+.aero-lista .aero-conf-acts{display:flex;gap:8px;padding:0 14px 12px;flex-wrap:wrap;}
+.aero-lista .aero-conf-acts button{all:unset;box-sizing:border-box;padding:10px 16px;font-size:16px;border-radius:var(--radius-s);border:1px solid var(--blue);cursor:pointer;color:var(--text);}
+.aero-lista .aero-conf-acts button[data-conf="ok"]{background:var(--blue);color:var(--bg);}
+.aero-lista .aero-conf-acts button:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
 .addr-row .lupa[disabled]{opacity:.6;cursor:progress;}
 /* trajeto: a linha pontilhada liga o centro do 1º ponto ao centro do último */
 ol.paradas{list-style:none;margin:10px 0 4px;padding:0;display:flex;flex-direction:column;}
@@ -742,11 +752,20 @@ body:not(.is-staff) [data-act="pdf-dia"]{display:none!important;}
 @media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ --show-line:#efd27c; } }
 :root[data-theme="light"]{ --show-line:#efd27c; }
 .cal-day{position:relative;}
-.cal-day.show::after{content:"";position:absolute;inset:0;border:2px solid var(--show-line);pointer-events:none;}
+.cal-day.show::after{content:none;}
 .cal-ev,.cal-ev:hover{background:transparent;border:0;border-radius:0;padding:1px 2px;color:var(--text);}
-.cal-legenda .lg-show{background:transparent;border:2px solid var(--show-line);border-radius:0;width:14px;height:12px;}
+.cal-legenda .lg-show{background:var(--show-bg);border:1px solid var(--grid-line);border-radius:2px;width:14px;height:12px;}
 @media (max-width:600px){ .cal-ev,.cal-ev:hover{background:transparent;padding:1px 1px;} }
 @media (max-width:600px){ .cal-ev{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;line-height:1.2;overflow-wrap:anywhere;} }
+/* ===== dia de show: quadrado inteiro com fundo um pouco mais claro (sem borda amarela) e nome centralizado (Daniel, 27/10) ===== */
+:root{ --show-bg:#2b3038; --show-bg-hover:#323843; }
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){ --show-bg:#ece7da; --show-bg-hover:#e4ddcc; } }
+:root[data-theme="light"]{ --show-bg:#ece7da; --show-bg-hover:#e4ddcc; }
+.cal-day.show{background:var(--show-bg);}
+.cal-day.show.tem:hover{background:var(--show-bg-hover);}
+.cal-day.show .cal-ev{text-align:center;}
+.cal-day.show .cal-ev:first-of-type{margin-top:auto;}
+.cal-day.show .cal-ev:last-of-type{margin-bottom:auto;}
 </style>
 </head>
 <body>
@@ -2923,7 +2942,11 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
       '<input type="url" id="'+id+'Link" inputmode="url" placeholder="Cole aqui o link copiado do Maps" value="'+esc(n.link)+'">'+
       '<div class="addr-hint" id="'+id+'Hint">Endereço e link são preenchidos sozinhos a partir do nome. Para o ponto exato, cole o link do Maps (<b>Compartilhar → Copiar link</b>).</div></div>';
   }
-  const lerEnd = id => { const a=document.getElementById(id), b=document.getElementById(id+'Link'); return { endereco: a?a.value.trim():'', mapa: b?b.value.trim():'' }; };
+  const lerEnd = id => { const a=document.getElementById(id), b=document.getElementById(id+'Link'); const r = { endereco: a?a.value.trim():'', mapa: b?b.value.trim():'' };
+    // sigla do aeroporto (campo iata) só enquanto o nome termina em "(XXX)" de um aeroporto do cadastro; some se a sigla sair do nome
+    const n = document.querySelector('input[data-par="'+id+'"]'), m = n && /\(([A-Z]{3})\)\s*$/.exec(n.value.trim());
+    if(m && typeof AEROS !== 'undefined' && AEROS.some(x => x[0]===m[1])) r.iata = m[1];
+    return r; };
   // ---- Dados do compromisso (config) ----
   // Dados do compromisso = comum aos dois cronogramas (geral: período, cidade, venue, showtime)
   //                       + hotéis da equipe puxados do Minha Viagem + locais de saída deste cronograma
@@ -3192,6 +3215,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
   let ehStaff = false;   // dono ou editor (botão de PDF do dia)
   let editando = false;
   let form = null;             // {tipo:'dia'|'item', diaId, itemId}
+  let modelosAbertos = false;   // lista "Modelos salvos" começa recolhida a cada novo item (não é salvo)
   let confirmar = null;        // {tipo, diaId, itemId}
   let salvando = false, msg = '';
   // Abas do cronograma: Equipe B (banda, ballet, crew, DJ) e Artístico (artístico)
@@ -3415,7 +3439,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
       else if(form && form.tipo==='escolher') h += '<div class="slot-add"><div class="cf-title">O que você quer adicionar?</div><div class="add-choice">'+
           '<button type="button" class="choice" data-act="add-schedule"><b>🕒 Schedule</b><span>Compromisso com horário e local: passagem de som, jantar, show, reunião.</span></button>'+
           '<button type="button" class="choice" data-act="escolher-desl"><b>🚐 ✈️ Deslocamento</b><span>Terrestre (van, ônibus, transfer) ou aéreo (voo).</span></button></div>'+
-          (modelos.some(m=>eqModelo(m)===equipeAba) ? '<div class="cf-lbl" style="margin-top:14px">⭐ Modelos salvos · Equipe '+equipeAba+'</div><div class="modelos">'+modelos.filter(m=>eqModelo(m)===equipeAba).map(m=>
+          (modelos.some(m=>eqModelo(m)===equipeAba) ? '<button type="button" class="cf-lbl modelos-tg" data-act="toggle-modelos" aria-expanded="'+(modelosAbertos?'true':'false')+'" aria-controls="listaModelos"><span class="seta" aria-hidden="true">'+(modelosAbertos?'▾':'▸')+'</span> ⭐ Modelos salvos · Equipe '+equipeAba+'</button><div class="modelos" id="listaModelos"'+(modelosAbertos?'':' hidden')+'>'+modelos.filter(m=>eqModelo(m)===equipeAba).map(m=>
             '<div class="modelo"><button type="button" class="modelo-btn" data-act="usar-modelo" data-id="'+m.id+'"><span>'+(m.modo==='aereo'?'✈️':(m.tipo==='deslocamento'?'🚐':'🕒'))+' '+esc(m.titulo)+'</span><small>'+esc(quemTexto(m.quem))+'</small></button>'+
             '<button type="button" class="modelo-del" data-act="apagar-modelo" data-id="'+m.id+'" aria-label="Apagar modelo">×</button></div>'+
             (confirmar && confirmar.tipo==='modelo' && confirmar.id===m.id ? caixaConfirmar('Apagar o modelo “'+esc(m.titulo)+'”?') : '')).join('')+'</div>' : '')+
@@ -3529,7 +3553,7 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
       const v = id => document.getElementById(id).value.trim();
       if(!v('fdData')){ document.getElementById('fdData').focus(); return; }
       const novo = clone(dados); novo.dias = novo.dias||[];
-      if(form.diaId){ const d = diaDe(novo, form.diaId); Object.assign(d,{data:v('fdData'),titulo:v('fdTitulo'),cidade:v('fdCidade'),local:v('fdLocal')},lerEnd('fdEnd')); }
+      if(form.diaId){ const d = diaDe(novo, form.diaId); Object.assign(d,{data:v('fdData'),titulo:v('fdTitulo'),cidade:v('fdCidade'),local:v('fdLocal')},lerEnd('fdEnd')); if(!lerEnd('fdEnd').iata) delete d.iata; }
       else { const id=uid(); novo.dias.push(Object.assign({id,data:v('fdData'),titulo:v('fdTitulo'),cidade:v('fdCidade'),local:v('fdLocal'),itens:[]},lerEnd('fdEnd'))); diaSel=id; }
       const diaSalvo = { tipo:'schedule', local:v('fdLocal'), endereco:lerEnd('fdEnd').endereco, mapa:lerEnd('fdEnd').mapa };
       form=null; const okDia = await salvar(novo);
@@ -3646,7 +3670,8 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     if(act==='novo-dia'){ form={tipo:'dia'}; confirmar=null; render(); view.scrollIntoView({block:'start'}); return; }
     if(act==='editar-dia'){ form={tipo:'dia',diaId:id}; confirmar=null; render(); view.scrollIntoView({block:'start'}); return; }
     if(act==='excluir-dia'){ confirmar={tipo:'dia',diaId:id}; form=null; return render(); }
-    if(act==='novo-item'){ form={tipo:'escolher'}; confirmar=null; return render(); }
+    if(act==='novo-item'){ form={tipo:'escolher'}; confirmar=null; modelosAbertos=false; return render(); }
+    if(act==='toggle-modelos'){ modelosAbertos=!modelosAbertos; return render(); }
     if(act==='add-schedule'){ form={tipo:'item',kind:'schedule'}; return render(); }
     if(act==='add-desloc'){ form={tipo:'item',kind:'deslocamento'}; return render(); }
     if(act==='escolher-desl'){ form={tipo:'escolher-desl'}; return render(); }
@@ -3810,21 +3835,45 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
     row.appendChild(box); inp.setAttribute('aria-expanded','true');
     aeroAberto = { inp, box, lista: r.lista, q: r.q };
   }
-  function aeroAplicar(inp, a){
-    aeroFechar(); if(!a) return;
+  // foto do local (nome, endereço, link, aviso) antes de a pessoa digitar o código: base para decidir e para o "Cancelar"
+  let aeroSnap = null;
+  function aeroFoto(inp){ const k = inp.dataset.par, e = document.getElementById(k), l = document.getElementById(k+'Link'), h = document.getElementById(k+'Hint');
+    const ds = x => x ? { v:x.value, auto:x.dataset.auto, aero:x.dataset.aero, iata:x.dataset.aeroIata, sug:x.classList.contains('sugerido') } : null;
+    return { inp, nome:inp.value, end:ds(e), link:ds(l), hint: h ? { html:h.innerHTML, aero:h.classList.contains('aero') } : null }; }
+  function aeroRestaurar(f){ if(!f) return; const k = f.inp.dataset.par;
+    const volta = (x, d) => { if(!x || !d) return; x.value = d.v;
+      [['auto',d.auto],['aero',d.aero],['aeroIata',d.iata]].forEach(([c,val]) => { if(val===undefined) delete x.dataset[c]; else x.dataset[c] = val; });
+      x.classList.toggle('sugerido', !!d.sug); };
+    f.inp.value = f.nome; volta(document.getElementById(k), f.end); volta(document.getElementById(k+'Link'), f.link);
+    const h = document.getElementById(k+'Hint'); if(h && f.hint){ h.innerHTML = f.hint.html; h.classList.toggle('aero', f.hint.aero); } }
+  view.addEventListener('focusin', ev => { const t = ev.target; if(t.dataset && t.dataset.par && !(aeroAberto && aeroAberto.inp===t)) aeroSnap = aeroFoto(t); });
+  function aeroPreencher(inp, a){
     const k = inp.dataset.par, end = document.getElementById(k), link = document.getElementById(k+'Link'), hint = document.getElementById(k+'Hint');
     inp.value = a[2]+' ('+a[0]+')';
-    const endTxt = a[2]+', '+a[3]+' - '+a[4];
-    const url = 'https://www.google.com/maps/search/?api=1&query='+a[5]+','+a[6];
-    const livreEnd = end && (!end.value.trim() || end.dataset.auto==='1' || end.dataset.aero==='1');
-    if(livreEnd){ end.value = endTxt; end.dataset.auto=''; end.dataset.aero='1'; end.dataset.aeroIata=a[0]; end.classList.remove('sugerido','buscando'); }
-    if(link && (!link.value.trim() || link.dataset.aero==='1' || ehLinkAuto(link.value))){ link.value = url; link.dataset.aero='1'; link.dataset.aeroIata=a[0]; link.classList.remove('sugerido'); }
-    if(hint){ hint.classList.add('aero');
-      hint.textContent = livreEnd ? '✈️ '+a[0]+'/'+a[1]+'. Terminal e ponto de desembarque não estão no cadastro: informe se souber.'
-        : 'Endereço mantido. Aeroporto escolhido: '+a[0]+'/'+a[1]+'. Terminal e ponto de desembarque não estão no cadastro: informe se souber.'; }
+    if(end){ end.value = a[2]+', '+a[3]+' - '+a[4]; end.dataset.auto=''; end.dataset.aero='1'; end.dataset.aeroIata=a[0]; end.classList.remove('sugerido','buscando'); }
+    if(link){ link.value = 'https://www.google.com/maps/search/?api=1&query='+a[5]+','+a[6]; link.dataset.aero='1'; link.dataset.aeroIata=a[0]; link.classList.remove('sugerido'); }
+    if(hint){ hint.classList.add('aero'); hint.textContent = '✈️ '+a[0]+'/'+a[1]+'. Terminal e ponto de desembarque não estão no cadastro: informe se souber.'; }
+    aeroSnap = aeroFoto(inp);   // nova base: o próximo aeroporto troca direto enquanto ninguém editar endereço/link
   }
-  view.addEventListener('input', ev => { const t = ev.target; if(!(t.dataset && t.dataset.par) || !ev.isTrusted) return; aeroMostrar(t); });
+  function aeroAplicar(inp, a){
+    if(!a) return aeroFechar();
+    const f = (aeroSnap && aeroSnap.inp===inp) ? aeroSnap : aeroFoto(inp);
+    const manualEnd = !!(f.end && f.end.v.trim() && f.end.auto!=='1' && f.end.aero!=='1');
+    const manualLink = !!(f.link && f.link.v.trim() && !ehLinkAuto(f.link.v) && f.link.aero!=='1');
+    if(!manualEnd && !manualLink){ aeroFechar(); aeroPreencher(inp, a); return; }   // vazio ou só preenchimento automático: troca direto
+    // endereço/link digitados à mão (ou editados depois do aeroporto): pergunta antes; nunca mistura um aeroporto com o endereço de outro
+    const box = aeroAberto && aeroAberto.box; if(!box) return;
+    aeroAberto.modo = 'conf'; aeroAberto.foto = f;
+    box.innerHTML = '<div class="aero-conf">Trocar para <b>'+esc(a[2])+' ('+esc(a[0])+')</b>? Isso substitui o endereço e o link atuais deste campo.</div>'
+      + '<div class="aero-conf-acts"><button type="button" data-conf="ok">Trocar</button><button type="button" data-conf="nao">Cancelar</button></div>';
+    box.onclick = e => { const b = e.target.closest('[data-conf]'); if(!b) return; e.stopPropagation();
+      if(b.dataset.conf==='ok'){ aeroFechar(); aeroPreencher(inp, a); } else aeroCancelar(); };
+    const ok = box.querySelector('[data-conf="ok"]'); if(ok) ok.focus({preventScroll:true});
+  }
+  function aeroCancelar(){ if(!aeroAberto) return; const f = aeroAberto.foto; aeroFechar(); aeroRestaurar(f); }   // nada muda: volta o local inteiro
+  view.addEventListener('input', ev => { const t = ev.target; if(!(t.dataset && t.dataset.par) || !ev.isTrusted) return; if(aeroAberto && aeroAberto.modo==='conf') aeroCancelar(); aeroMostrar(t); });
   view.addEventListener('keydown', ev => {
+    if(aeroAberto && aeroAberto.modo==='conf'){ if(ev.key==='Escape'){ ev.preventDefault(); aeroCancelar(); } else if(ev.key==='Enter' && ev.target===aeroAberto.inp) ev.preventDefault(); return; }
     if(!aeroAberto || ev.target !== aeroAberto.inp) return;
     if(ev.key==='Escape'){ ev.preventDefault(); aeroFechar(); return; }
     if(ev.key==='Enter'){ ev.preventDefault();   // lista aberta: Enter nunca envia o formulário
@@ -3832,8 +3881,8 @@ ${blocoPrevisao(p)}Qualquer dúvida, estamos à disposição!`;
       if(aeroAberto.q.length===3 && ex.length===1 && aeroAberto.lista.length===1) aeroAplicar(aeroAberto.inp, ex[0]);   // só código IATA exato e único
     }
   });
-  document.addEventListener('pointerdown', ev => { if(aeroAberto && !aeroAberto.box.contains(ev.target) && ev.target!==aeroAberto.inp) aeroFechar(); });
-  view.addEventListener('focusout', ev => { if(aeroAberto && ev.target===aeroAberto.inp) setTimeout(()=>{ if(aeroAberto && document.activeElement!==aeroAberto.inp) aeroFechar(); }, 150); });
+  document.addEventListener('pointerdown', ev => { if(aeroAberto && !aeroAberto.box.contains(ev.target) && ev.target!==aeroAberto.inp){ if(aeroAberto.modo==='conf') aeroCancelar(); else aeroFechar(); } });
+  view.addEventListener('focusout', ev => { if(aeroAberto && aeroAberto.modo!=='conf' && ev.target===aeroAberto.inp) setTimeout(()=>{ if(aeroAberto && aeroAberto.modo!=='conf' && document.activeElement!==aeroAberto.inp) aeroFechar(); }, 150); });
   // menu "usar local salvo" (vale também para paradas criadas depois)
   view.addEventListener('change', ev=>{
     const sel = ev.target; if(!sel.matches || !sel.matches('select.lg-pick') || sel.value==='') return;
