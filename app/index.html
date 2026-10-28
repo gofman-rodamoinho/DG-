@@ -1562,7 +1562,7 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
               ${roommates ? '<div class="hroom">'+tr(p,'Divide quarto com: ')+roommates+'</div>' : ''}
               ${note}
               ${voucherLink}
-              ${h.address ? `<a class="pdf-link" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(h.address)}" target="_blank" rel="noopener">${tr(p,'🧭 Como chegar')}</a>` + (window.__mvUber ? window.__mvUber.html({local:h.hotel, endereco:h.address, mapa:h.mapa||'', lat:h.lat, lng:h.lng}, 'pdf-link') : '') : ''}
+              ${h.address ? `<a class="pdf-link" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(h.address)}" target="_blank" rel="noopener">${tr(p,'🧭 Como chegar')}</a>` + (window.__mvUber ? window.__mvUber.html({local:h.hotel, endereco:h.address, mapa:h.mapa||'', lat:h.lat, lng:h.lng}, 'pdf-link') : '') : ((window.__mvUber && window.__mvUber.coord({local:h.hotel, endereco:'', mapa:h.mapa||'', lat:h.lat, lng:h.lng})) ? window.__mvUber.html({local:h.hotel, endereco:'', mapa:h.mapa||'', lat:h.lat, lng:h.lng}, 'pdf-link') : '')}
             `;
             hGrid.appendChild(card);
           });
