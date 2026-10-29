@@ -96,7 +96,7 @@ h1 .route{color:var(--amber);font-size:0.62em;font-weight:500;letter-spacing:.3p
 .prow-head .arrow{color:var(--text-faint);font-size:10px;width:10px;flex-shrink:0;}
 .team-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block;}
 .dot-BANDA{background:var(--c-banda);} .dot-BALLET{background:var(--c-ballet);} .dot-CREW{background:var(--c-crew);}
-.dot-ARTISTICO{background:var(--c-art);} .dot-DJ{background:var(--c-dj);}
+.dot-DJ{background:var(--c-dj);}
 
 .cat-group-header{display:grid;grid-template-columns:20px 1fr;align-items:center;gap:10px;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--hairline);cursor:pointer;user-select:none;transition:background .12s;}
 .cat-group-header:hover{background:var(--panel-raised);}
@@ -411,8 +411,8 @@ body.has-install-bar .wrap{padding-bottom:150px;}
   });
 
   let state = { view: WEEK_ORDER[0], team:'ALL', status:'ALL', q:'', openPerson:null };
-  const teamLabels = {ALL:'Todos', BANDA:'Banda', BALLET:'Ballet', CREW:'Crew', ARTISTICO:'Artístico'};
-  const CAT_GROUP_ORDER = ['BANDA','BALLET','CREW','ARTISTICO','DJ'];
+  const teamLabels = {ALL:'Todos', BANDA:'Banda', BALLET:'Ballet', CREW:'Crew'};
+  const CAT_GROUP_ORDER = ['BANDA','BALLET','CREW','DJ'];
   let collapsedCats = new Set(CAT_GROUP_ORDER);
   const statusLabels = {};
   const STATUS_TEXT = {ONIBUS:'ÔNIBUS FRETADO'};
@@ -1888,7 +1888,7 @@ ${blocoPrevisao()}Qualquer dúvida, estamos à disposição!`;
 <script>
 /* =============== CRONOGRAMA (day sheet) ===============
    Para atualizar: edite só o objeto CRONOGRAMA abaixo.
-   quem: TODOS, BANDA, BALLET, CREW, ARTISTICO, DJ (pode ser mais de um)
+   quem: TODOS, BANDA, BALLET, CREW, DJ (pode ser mais de um)
    destaque: true pinta o item de âmbar (ex.: SHOW)                       */
 const CRONOGRAMA = {
   exemplo: true,
@@ -1916,8 +1916,8 @@ const CRONOGRAMA = {
 };
 
 (function(){
-  const GRUPOS = [['TODOS','Todos'],['BANDA','Banda'],['BALLET','Ballet'],['CREW','Crew'],['ARTISTICO','Artístico']];
-  const NOMES = {BANDA:'Banda',BALLET:'Ballet',CREW:'Crew',ARTISTICO:'Artístico',DJ:'DJ'};
+  const GRUPOS = [['TODOS','Todos'],['BANDA','Banda'],['BALLET','Ballet'],['CREW','Crew']];
+  const NOMES = {BANDA:'Banda',BALLET:'Ballet',CREW:'Crew',DJ:'DJ'};
   const DOW = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   const view = document.getElementById('cronoView');
