@@ -1320,9 +1320,13 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
     return 'TBC';
   }
 
+  // v180 (Daniel 29/10): a Artístico (artístico / categoria ARTISTICO) não entra no Minha Viagem — trava permanente, vale para todo fluxo
+  const ehEquipeA = x => !!x && (String(x.equipe||'').trim().toUpperCase()==='A' || String(x.categoria||'').trim().toUpperCase()==='ARTISTICO');
+  window.__mvEhEquipeA = ehEquipeA;
   WEEK_ORDER.forEach(wid => {
     let raw = [];
     try{ raw = JSON.parse(document.getElementById('people-data-' + wid).textContent); }catch(e){ console.error(e); }
+    raw = (Array.isArray(raw) ? raw : []).filter(p => !ehEquipeA(p));
     WEEKS[wid].people = raw.map((p, pi) => ({
       ...p,
       legs: p.legs.map(l => ({...l, statusSimple: simplifyStatus(l.status)}))
@@ -4621,7 +4625,10 @@ a.dir-nome:hover{text-decoration:underline;}
     if(pt.tipo==='pessoa+'){
       if(achaPessoa(week.people, pt.nome)) return false;
       const it = pt.item||{};
-      week.people.push({ equipe:it.equipe||'A', funcao:it.funcao||'', nome:pt.nome, categoria:it.categoria||'ARTISTICO', legs:[], hotel_stays:[], transporte_pendente:true });
+      // v180: pessoa sem equipe/categoria era criada como Artístico; agora Artístico nunca entra (ignorada em silêncio)
+      if(!it.equipe && !it.categoria){ console.info('Minha Viagem: inclusão sem equipe ignorada (Artístico não entra):', pt.nome); return false; }
+      if((window.__mvEhEquipeA||(()=>false))(it)){ console.info('Minha Viagem: Artístico ignorada:', pt.nome); return false; }
+      week.people.push({ equipe:it.equipe, funcao:it.funcao||'', nome:pt.nome, categoria:it.categoria, legs:[], hotel_stays:[], transporte_pendente:true });
       return true;
     }
     if(pt.tipo==='pessoa-'){
@@ -4657,7 +4664,7 @@ a.dir-nome:hover{text-decoration:underline;}
   /* ---------- ler a pasta do Drive ---------- */
 
   /* ---------- conferir quem viaja com o budget (aba COSTS) ---------- */
-  const SECOES = { 'ARTISTIC TEAM':['ARTISTICO','A'], 'ARTISTIC':['ARTISTICO','A'], 'CREW':['CREW','B'], 'DANCERS':['BALLET','B'], 'BAND':['BANDA','B'] };
+  const SECOES = { 'ARTISTIC TEAM':['ARTISTICO','A'], 'ARTISTIC':['ARTISTICO','A'], 'CREW':['CREW','B'], 'DANCERS':['BALLET','B'], 'BAND':['BANDA','B'] };   // seção ARTISTIC é lida só para saber onde começa/termina; ninguém dela é importado (v180)
   const NAO_PESSOA = /^(local|no ?name|check ?mate|per diem|freitas|camera ?man|tbc|a confirmar|n[ãa]o definido|ballet \d)/i; // linhas genéricas do budget, não são pessoa
   async function lerBudget(cfg){
     const r = await mcp.callTool('Google Sheets', 'get_values', { spreadsheetId: cfg.budget, range: 'COSTS!A1:H140' }, { cache:{ refresh:true, gcTime:30000 } });
@@ -4670,6 +4677,7 @@ a.dir-nome:hover{text-decoration:underline;}
       if(b.toUpperCase()==='SUB TOTAL' || String(row[3]||'').toUpperCase()==='SUB TOTAL'){ return; }
       if(!sec || !a || NAO_PESSOA.test(a)) return;
       if(/n[ãa]o (viaja|ir[áa]|vai)|cancelad/i.test(g)) return; // marcado no FYI como quem não viaja
+      if(sec.v[1]==='A' || sec.v[0]==='ARTISTICO') return;   // v180: Artístico (ARTISTIC TEAM) nunca é importada do budget
       out.push({ nome:a.replace(/\s*\(.*?\)\s*$/,'').replace(/\s+/g,' ').trim(), funcao:b, categoria:sec.v[0], equipe:sec.v[1] });
     });
     return out;
@@ -4678,6 +4686,7 @@ a.dir-nome:hover{text-decoration:underline;}
     const itens = [];
     if(!lista || !lista.length) throw new Error('a aba COSTS não trouxe nenhum nome (conferência de elenco pulada)');
     lista.forEach(b=>{
+      if((window.__mvEhEquipeA||(()=>false))(b)) return;   // v180: Artístico nunca vira sugestão de inclusão
       if(!achaPessoa(week.people, b.nome)){
         itens.push({ f:{ title:'budget · aba COSTS' }, info:{ pessoa:b.nome }, pessoa:b.nome, erro:'', patch:{ tipo:'pessoa+', item:{ funcao:b.funcao, categoria:b.categoria, equipe:b.equipe } }, marcado:true });
       }
@@ -4997,7 +5006,9 @@ a.dir-nome:hover{text-decoration:underline;}
     'daniel gofman': 'Daniel Gofman Maidana', 'daniel gofma maidana': 'Daniel Gofman Maidana', 'daniel gofman maidana': 'Daniel Gofman Maidana',
     'rafael messias': 'Rafael Costa Messias', 'vinicius urcioli': 'Vinicius Urcioli Hernandes', 'pedro augusto': 'Pedro Augusto Brito da Silva',
     'arthur luna becaris': 'Arthur Luna', 'renan ozorio': 'Renan Ozório', 'jessica suhette': 'Jessica de Souza Suhett',
-    'bruno paiva': 'Bruno Paiva Pinheiro de Souza', 'vitor hugo rodrigues': 'Vitor Hugo Rodrigues da Silva', 'leonardo da costa ramiro': 'Leonardo Ramiro', 'nicholas rodas': 'Nicholas Rosa', 'giula andrade': 'Giulia Andrade', 'wanderso soares': 'Wanderson Soares', 'tercio marques': 'Tércio Marques',
+    'bruno paiva': 'Bruno Paiva Pinheiro de Souza', 'vitor hugo rodrigues': 'Vitor Hugo Rodrigues da Silva', 'leonardo da costa ramiro': 'Leonardo Ramiro',
+    'nicholas rodas': 'Nicholas Rosa', 'giula andrade': 'Giulia Andrade',
+    'wanderso soares': 'Wanderson Soares', 'tercio marques': 'Tércio Marques',
     'arielle magalhaes de macedo': 'Arielle Magalhães de Macedo'
   };
   function canonical(nome){ const k = nkey(nome); return APELIDOS[k] || null; }
@@ -5109,6 +5120,7 @@ a.dir-nome:hover{text-decoration:underline;}
     let atualizados = 0;
     Object.keys(WEEKS).filter(function(k){ return /^eda\d$/.test(k); }).forEach(function(semana){
       (WEEKS[semana].people || []).forEach(function(p){
+        if ((window.__mvEhEquipeA||function(){return false;})(p)) return;   // v180: Artístico nunca é lida da planilha EDA
         const cands = aereoLite.filter(function(a){ return a.semana===semana && mesmaPessoa(a.nome, p.nome); });
         if (!cands.length) return;
         (p.legs||[]).forEach(function(leg){
@@ -5135,6 +5147,7 @@ a.dir-nome:hover{text-decoration:underline;}
     let atualizados = 0;
     Object.keys(WEEKS).filter(function(k){ return /^eda\d$/.test(k); }).forEach(function(semana){
       (WEEKS[semana].people || []).forEach(function(p){
+        if ((window.__mvEhEquipeA||function(){return false;})(p)) return;   // v180: idem para hotel
         (p.hotel_stays||[]).forEach(function(st){
           const cand = hotelLite.find(function(h){
             return h.semana===semana && h.cidade===st.city && h.ocupantes.some(function(o){ return mesmaPessoa(o, p.nome); });
