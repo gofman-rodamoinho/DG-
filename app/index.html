@@ -1320,7 +1320,7 @@ window.__MV_AEROS = [["GIG","SBGL","Aeroporto Internacional do Rio de Janeiro/Ga
     return 'TBC';
   }
 
-  // v180 (Daniel 29/10): a Artístico (artístico / categoria ARTISTICO) não entra no Minha Viagem — trava permanente, vale para todo fluxo
+  // v180 (Daniel 29/10): categoria ARTISTICO não entra no Minha Viagem — trava permanente, vale para todo fluxo
   const ehEquipeA = x => !!x && (String(x.equipe||'').trim().toUpperCase()==='A' || String(x.categoria||'').trim().toUpperCase()==='ARTISTICO');
   window.__mvEhEquipeA = ehEquipeA;
   WEEK_ORDER.forEach(wid => {
@@ -4597,7 +4597,7 @@ a.dir-nome:hover{text-decoration:underline;}
 
   /* ---------- aplicar patches (todos os viewers) ---------- */
   function levd(a,b){ const m=a.length,n=b.length; if(!m) return n; if(!n) return m; let d=[]; for(let j=0;j<=n;j++) d[j]=j; for(let i=1;i<=m;i++){ let prev=d[0]; d[0]=i; for(let j=1;j<=n;j++){ const t=d[j]; d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1)); prev=t; } } return d[n]; }
-  // dois pedaços de nome "batem" se forem iguais, variarem em 1 letra (Philipe/Phelipe), ou um for começo do outro ([removido]/[removido]ffer, Leo/Leonardo)
+  // dois pedaços de nome "batem" se forem iguais, variarem em 1 letra (Suhett/Suhette), ou um for começo do outro (Leo/Leonardo)
   const tokEq = (x,y) => x===y || (x.length>4 && y.length>4 && levd(x,y)<=1) || (x.length>=4 && y.length>=4 && (y.startsWith(x) || x.startsWith(y)));
   const LIGACAO = /^(de|da|do|dos|das|e)$/;
   const CARGO = /^(stylist|makeup|hair|chef|manager|producer|dj)$/; // palavra de função colada no nome ("André Stylist")
@@ -4622,9 +4622,9 @@ a.dir-nome:hover{text-decoration:underline;}
     if(pt.tipo==='pessoa+'){
       if(achaPessoa(week.people, pt.nome)) return false;
       const it = pt.item||{};
-      // v180: pessoa sem equipe/categoria era criada como Artístico; agora Artístico nunca entra (ignorada em silêncio)
+      // v180: pessoa sem equipe/categoria era criada como artístico; agora nunca entra (ignorada em silêncio)
       if(!it.equipe && !it.categoria){ console.info('Minha Viagem: inclusão sem equipe ignorada (Artístico não entra):', pt.nome); return false; }
-      if((window.__mvEhEquipeA||(()=>false))(it)){ console.info('Minha Viagem: Artístico ignorada:', pt.nome); return false; }
+      if((window.__mvEhEquipeA||(()=>false))(it)){ console.info('Minha Viagem: Artístico ignorado:', pt.nome); return false; }
       week.people.push({ equipe:it.equipe, funcao:it.funcao||'', nome:pt.nome, categoria:it.categoria, legs:[], hotel_stays:[], transporte_pendente:true });
       return true;
     }
@@ -4674,7 +4674,7 @@ a.dir-nome:hover{text-decoration:underline;}
       if(b.toUpperCase()==='SUB TOTAL' || String(row[3]||'').toUpperCase()==='SUB TOTAL'){ return; }
       if(!sec || !a || NAO_PESSOA.test(a)) return;
       if(/n[ãa]o (viaja|ir[áa]|vai)|cancelad/i.test(g)) return; // marcado no FYI como quem não viaja
-      if(sec.v[1]==='A' || sec.v[0]==='ARTISTICO') return;   // v180: Artístico (ARTISTIC TEAM) nunca é importada do budget
+      if(sec.v[1]==='A' || sec.v[0]==='ARTISTICO') return;   // v180: (ARTISTIC TEAM) nunca é importada do budget
       out.push({ nome:a.replace(/\s*\(.*?\)\s*$/,'').replace(/\s+/g,' ').trim(), funcao:b, categoria:sec.v[0], equipe:sec.v[1] });
     });
     return out;
@@ -5117,7 +5117,7 @@ a.dir-nome:hover{text-decoration:underline;}
     let atualizados = 0;
     Object.keys(WEEKS).filter(function(k){ return /^eda\d$/.test(k); }).forEach(function(semana){
       (WEEKS[semana].people || []).forEach(function(p){
-        if ((window.__mvEhEquipeA||function(){return false;})(p)) return;   // v180: Artístico nunca é lida da planilha EDA
+        if ((window.__mvEhEquipeA||function(){return false;})(p)) return;   // v180: Artístico nunca é lido da planilha EDA
         const cands = aereoLite.filter(function(a){ return a.semana===semana && mesmaPessoa(a.nome, p.nome); });
         if (!cands.length) return;
         (p.legs||[]).forEach(function(leg){
@@ -5585,7 +5585,7 @@ body.has-install-bar #mvTopo{bottom:calc(150px + env(safe-area-inset-bottom,0px)
 })();
 </script>
 <script>
-/* ===== v172: navbar fixa no topo (Minha Viagem · Cronograma B · Cronograma · Calendário).
+/* ===== v172: navbar fixa no topo (Minha Viagem · Cronograma B · Calendário).
    Não troca nenhuma regra: aciona os mesmos botões de antes (#vsViagem, #vsCrono) e a volta para a agenda (#mvBack).
    O compromisso aberto é o mesmo de sempre (o último escolhido, ou o primeiro que a pessoa pode ver). ===== */
 (function(){
