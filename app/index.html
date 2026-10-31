@@ -3873,15 +3873,17 @@ a.dir-nome:hover{text-decoration:underline;}
   }
   // v176: imagens anexadas a um compromisso (arquivo publicado ao lado da página). Hoje: só o setlist do RTM 1º FDS.
   const IMAGENS_EVENTO = {
-    rtm1: [ { titulo:'Setlist - Rock the Mountain - 1º FDS', src:'arquivos/setlist-rock-the-mountain-1fds.png', w:1600, h:899 } ]
+    rtm1: [ { titulo:'Setlist - Rock the Mountain - 1º FDS', src:'arquivos/setlist-rock-the-mountain-1fds.png', w:1600, h:899,
+              pdf:'arquivos/setlist-rock-the-mountain-1fds.pdf' } ]   // v188: o Compartilhar entrega o PDF oficial
   };
   const imagensEvento = () => IMAGENS_EVENTO[window.__mvWeek] || [];
   // v187: Compartilhar — imagem vai como arquivo; PDF/link vai como link
   const arqCache = {};   // src -> { p: Promise<File>, f: File já pronto }
+  const arqSrc = im => im.pdf || im.src;   // v188: se a imagem tem PDF oficial, é ele que vai no Compartilhar
   function prepararArquivo(im){
-    const c = arqCache[im.src] || (arqCache[im.src] = { p:null, f:null });
-    if(!c.p) c.p = fetch(im.src).then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.blob(); })
-      .then(b => { const nome = (String(im.src).split('/').pop() || 'arquivo').split('?')[0]; c.f = new File([b], nome, { type: b.type || 'image/png' }); return c.f; })
+    const src = arqSrc(im), c = arqCache[src] || (arqCache[src] = { p:null, f:null });
+    if(!c.p) c.p = fetch(src).then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.blob(); })
+      .then(b => { const nome = (String(src).split('/').pop() || 'arquivo').split('?')[0]; c.f = new File([b], nome, { type: im.pdf ? 'application/pdf' : (b.type || 'image/png') }); return c.f; })
       .catch(e => { c.p = null; throw e; });
     return c.p;
   }
@@ -3894,7 +3896,7 @@ a.dir-nome:hover{text-decoration:underline;}
   }
   async function compartilharImagem(im, root){
     try{
-      const c = arqCache[im.src], file = (c && c.f) || await prepararArquivo(im);   // já preparado ao abrir as Informações: a folha abre no mesmo toque
+      const c = arqCache[arqSrc(im)], file = (c && c.f) || await prepararArquivo(im);   // já preparado ao abrir as Informações: a folha abre no mesmo toque
       if(navigator.share && navigator.canShare && navigator.canShare({ files:[file] })){
         try{ await navigator.share({ files:[file], title: im.titulo }); return; }
         catch(e){ if(e && e.name==='AbortError') return; }   // cancelou: sem aviso; outro erro -> baixa o arquivo
