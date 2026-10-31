@@ -966,6 +966,11 @@ header.top.mv-sem-ev .mv-marca{display:none;}
 @media (max-width:560px){ .mv-nav .mv-nav-in button{padding:4px 14px;} }
 @media (max-width:380px){ .mv-nav .mv-nav-in button{padding:4px 10px;} }
 @media (max-width:330px){ .mv-nav .mv-nav-in button{padding:4px 7px;} }
+/* ===== v189: destaque deslizante (a animação da pílula é feita no script; aqui só o visual) ===== */
+.mv-nav .mv-nav-pill{background:rgba(255,255,255,.16);transition:opacity .2s;will-change:transform,width;}
+.mv-nav .mv-nav-in button span{display:inline-block;transition:transform .25s cubic-bezier(.3,1.4,.5,1);}
+.mv-nav .mv-nav-in button[aria-current="page"] span{transform:scale(1.05);}
+@media (prefers-reduced-motion: reduce){ .mv-nav .mv-nav-in button span{transition:none;} }
 .wrap{padding-bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + var(--mv-vv,0px) + 108px)!important;}
 #mvTopo#mvTopo{bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-bottom,0px)) + var(--mv-vv,0px) + 84px)!important;}
 /* ===== v174: lista de Equipe — lista própria no tema escuro (a nativa saía branca com texto branco no computador) ===== */
@@ -5692,13 +5697,29 @@ body.has-install-bar #mvTopo{bottom:calc(150px + env(safe-area-inset-bottom,0px)
     if(window.__mvRolarAgora && body.classList.contains('view-crono')) window.__mvRolarAgora();   // v185
     return true;
   };
+  // v189: pílula desliza da aba antiga para a nova, esticando de leve no meio do caminho (efeito mola)
+  let pilK = null, pilL = 0, pilW = 0, pilAnim = null;
+  const moverPilula = (pill, k, L, W) => {
+    if(pilK !== null && k !== pilK && pill.style.opacity === '1' && !reduz() && pill.animate){
+      if(pilAnim) pilAnim.cancel();
+      const oc = pilL + pilW/2, nc = L + W/2, mW = Math.max(pilW, W) + Math.min(Math.abs(nc - oc) * 0.35, 48), mL = (oc + nc)/2 - mW/2;
+      pilAnim = pill.animate([
+        { transform:'translateX('+pilL+'px)', width:pilW+'px', easing:'cubic-bezier(.45,0,.55,1)' },
+        { transform:'translateX('+mL+'px) scaleY(.92)', width:mW+'px', offset:.42, easing:'cubic-bezier(.3,1.45,.55,1)' },
+        { transform:'translateX('+L+'px)', width:W+'px' }
+      ], { duration:320 });
+      pilAnim.onfinish = pilAnim.oncancel = () => { pilAnim = null; };
+    }
+    pilK = k; pilL = L; pilW = W;
+    pill.style.width = W+'px'; pill.style.transform = 'translateX('+L+'px)'; pill.style.opacity = '1';   // posição final (e recálculo ao mudar o tamanho da tela)
+  };
   const ativo = () => {
     let k = 'cal';
     if(!naAgenda()) k = vB.getAttribute('aria-pressed')==='true' ? 'cronoB' : 'viagem';
     const sem = body.classList.contains('sem-liberados');
     nav.querySelectorAll('[data-nav]').forEach(b => { if(b.dataset.nav===k) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); if(b.dataset.nav!=='cal') b.disabled = sem; });
     const b = nav.querySelector('[data-nav="'+k+'"]'), pill = nav.querySelector('.mv-nav-pill');
-    if(b && pill && b.offsetWidth){ pill.style.width = b.offsetWidth+'px'; pill.style.transform = 'translateX('+b.offsetLeft+'px)'; pill.style.opacity = '1'; }
+    if(b && pill && b.offsetWidth) moverPilula(pill, k, b.offsetLeft, b.offsetWidth);   // v189
   };
   nav.addEventListener('click', ev => {
     const b = ev.target.closest('[data-nav]'); if(!b || b.disabled) return;
