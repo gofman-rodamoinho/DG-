@@ -3617,6 +3617,24 @@ a.dir-nome:hover{text-decoration:underline;}
   let souDono = false;   // dados gerais: só o dono vê e preenche
   let ehStaff = false;   // dono ou editor (botão de PDF do dia)
   let editando = false;
+  // v184: ao abrir o Cronograma, rola uma vez até o "Agora" (ou "Próximo", ou o painel de hoje) depois que os dados carregam
+  let rolagemAgoraPendente = false;
+  function rolarParaCompromissoAtual(){
+    // a cápsula de navegação volta a página ao topo logo depois de trocar de aba; por isso a rolagem vem no quadro seguinte
+    requestAnimationFrame(()=>{
+      if(view.hidden || editando || !view.getClientRects().length) return;
+      const alvo = view.querySelector('.slot.now') || view.querySelector('.slot.next') || view.querySelector('.panel.hoje');
+      if(!alvo) return;
+      // posição real do cartão (sem a animação de entrada) menos o scroll-padding-top (--mv-topo) da página
+      let y = 0; for(let e = alvo; e; e = e.offsetParent) y += e.offsetTop;
+      const pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+      window.scrollTo({top: Math.max(0, y - pad), behavior:'auto'});
+    });
+  }
+  // v184: ao abrir o evento pelo calendário o cronograma aparece só por troca de classe (sem render): rola nessa hora, uma vez
+  new MutationObserver(()=>{
+    if(rolagemAgoraPendente && carregado && view.getClientRects().length){ rolagemAgoraPendente = false; rolarParaCompromissoAtual(); }
+  }).observe(document.body, {attributes:true, attributeFilter:['class']});
   let form = null;             // {tipo:'dia'|'item', diaId, itemId}
   let modelosAbertos = false;   // lista "Modelos salvos" começa recolhida a cada novo item (não é salvo)
   let confirmar = null;        // {tipo, diaId, itemId}
@@ -3989,7 +4007,7 @@ a.dir-nome:hover{text-decoration:underline;}
     }
     const r = rotuloDia(dia.data);
     const endDia = enderecoHtml(dia.endereco, dia.mapa), cDia = comoChegar(dia.endereco, dia.mapa, dia.local);
-    h += '<div class="panel"><div class="dayhead"><div class="eyebrow">'+r.dw+' · '+r.dd+(dia.cidade?' · '+esc(dia.cidade):'')+'</div><div class="dh-title">'+esc(dia.titulo||('Dia '+(ds.indexOf(dia)+1)))+'</div>'+notasDiaHtml(dia)+(dia.local?'<div class="dh-meta">'+esc(dia.local)+'</div>':'')+(endDia?'<div class="dh-meta">'+endDia+'</div>':'')+(cDia?'<span class="maplinks">'+cDia+uberDia(dia)+'</span>':'');
+    h += '<div class="panel'+(ehHoje?' hoje':'')+'"><div class="dayhead"><div class="eyebrow">'+r.dw+' · '+r.dd+(dia.cidade?' · '+esc(dia.cidade):'')+'</div><div class="dh-title">'+esc(dia.titulo||('Dia '+(ds.indexOf(dia)+1)))+'</div>'+notasDiaHtml(dia)+(dia.local?'<div class="dh-meta">'+esc(dia.local)+'</div>':'')+(endDia?'<div class="dh-meta">'+endDia+'</div>':'')+(cDia?'<span class="maplinks">'+cDia+uberDia(dia)+'</span>':'');
     if(ehStaff) h += '<div class="cf-actions"><button type="button" class="btn-pdf" data-act="pdf-dia" data-id="'+dia.id+'">📄 Exportar dia em PDF</button></div>';
     if(editando){
       h += '<div class="cf-actions"><button type="button" class="btn-pdf" data-act="editar-dia" data-id="'+dia.id+'">✎ Editar dia</button>'+(dia.virtual?'':'<button type="button" class="btn-pdf danger" data-act="excluir-dia" data-id="'+dia.id+'">Excluir dia</button>')+'</div>';
@@ -4072,6 +4090,7 @@ a.dir-nome:hover{text-decoration:underline;}
     }
     h += '<div class="crono-diag">'+esc(window.__mvDiag || ('Acesso detectado: banco = '+(semBanco?'indisponível':'carregando…')))+'</div>';
     view.innerHTML = h; bind();
+    if(rolagemAgoraPendente && carregado && view.getClientRects().length){ rolagemAgoraPendente = false; rolarParaCompromissoAtual(); }   // v184: só quando o cronograma está na tela
   }
 
   // ---------- ações ----------
@@ -4268,6 +4287,7 @@ a.dir-nome:hover{text-decoration:underline;}
     bC.setAttribute('aria-pressed', String(v==='cronoB'));
     lsSet('mv-view', v);
     if(crono){
+      rolagemAgoraPendente = true;   // v184
       if(eq!==equipeAba){ equipeAba = eq; editando=false; }
       const alvo = docDe(window.__mvWeek, equipeAba);
       if(alvo!==DOC_PATH && dbHandle) assinar(alvo); else render();
