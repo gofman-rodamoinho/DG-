@@ -905,6 +905,14 @@ html{scroll-padding-bottom:calc(max(var(--mv-nav-sobe,0px), env(safe-area-inset-
   font-family:var(--font-display);font-size:12.5px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;padding:8px 16px;}
 .dir-img .dir-img-btn:hover{border-color:var(--blue);color:var(--blue);}
 .dir-img .dir-img-btn:focus-visible,.dir-img .dir-img-mini:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+/* v187: Compartilhar */
+.dir-img .dir-img-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.dir-arq{display:inline-flex;align-items:center;gap:6px;}
+.dir-share{min-height:32px;background:transparent;color:var(--text);border:1px solid var(--hairline);border-radius:999px;cursor:pointer;font-family:var(--font-display);font-size:11px;font-weight:500;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;}
+.dir-share:hover{border-color:var(--blue);color:var(--blue);}
+.dir-share:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+.dir-share-msg{font-size:12px;color:var(--text-dim);overflow-wrap:anywhere;}
+.dir-share-msg:empty{display:none;}
 .mv-img-view{position:fixed;inset:0;z-index:95;display:flex;flex-direction:column;background:#07090c;}
 .mv-img-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:calc(env(safe-area-inset-top,0px) + 10px) max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--hairline);background:#0e1117;}
 .mv-img-bar .t{flex:1 1 180px;min-width:0;font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:.3px;color:var(--text);}
@@ -3868,14 +3876,48 @@ a.dir-nome:hover{text-decoration:underline;}
     rtm1: [ { titulo:'Setlist - Rock the Mountain - 1º FDS', src:'arquivos/setlist-rock-the-mountain-1fds.png', w:1600, h:899 } ]
   };
   const imagensEvento = () => IMAGENS_EVENTO[window.__mvWeek] || [];
+  // v187: Compartilhar — imagem vai como arquivo; PDF/link vai como link
+  const arqCache = {};   // src -> { p: Promise<File>, f: File já pronto }
+  function prepararArquivo(im){
+    const c = arqCache[im.src] || (arqCache[im.src] = { p:null, f:null });
+    if(!c.p) c.p = fetch(im.src).then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.blob(); })
+      .then(b => { const nome = (String(im.src).split('/').pop() || 'arquivo').split('?')[0]; c.f = new File([b], nome, { type: b.type || 'image/png' }); return c.f; })
+      .catch(e => { c.p = null; throw e; });
+    return c.p;
+  }
+  function avisoArq(root, t){ const m = root && root.querySelector('.dir-share-msg'); if(!m) return; m.textContent = t; clearTimeout(m._t); m._t = setTimeout(() => { m.textContent = ''; }, 4500); }
+  async function baixarArquivo(file){
+    let d = null; try{ d = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null; }catch(e){ d = null; }
+    if(d && d.save){ await d.save({ filename: file.name, data: file }); return; }   // dentro do artefato o download vai pela capacidade de downloads
+    const u = URL.createObjectURL(file), a = document.createElement('a'); a.href = u; a.download = file.name; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+  }
+  async function compartilharImagem(im, root){
+    try{
+      const c = arqCache[im.src], file = (c && c.f) || await prepararArquivo(im);   // já preparado ao abrir as Informações: a folha abre no mesmo toque
+      if(navigator.share && navigator.canShare && navigator.canShare({ files:[file] })){
+        try{ await navigator.share({ files:[file], title: im.titulo }); return; }
+        catch(e){ if(e && e.name==='AbortError') return; }   // cancelou: sem aviso; outro erro -> baixa o arquivo
+      }
+      await baixarArquivo(file); avisoArq(root, 'Compartilhamento indisponível aqui — arquivo baixado');
+    }catch(e){ if(e && (e.name==='AbortError' || e.code==='declined')) return; avisoArq(root, 'Não foi possível compartilhar agora. Tente de novo.'); }
+  }
+  async function compartilharLink(a, root){
+    if(navigator.share){ try{ await navigator.share({ title: a.titulo, url: a.url }); return; } catch(e){ if(e && e.name==='AbortError') return; } }
+    try{ await navigator.clipboard.writeText(a.url); avisoArq(root, 'Link copiado'); }
+    catch(e){ avisoArq(root, 'Copie o link: '+a.url); }
+  }
   function blocoArquivos(){
     const arq = arquivosDiretorio(), imgs = imagensEvento();
     return '<section class="dir-sec" aria-label="Arquivos"><div class="dir-gt">📎 Arquivos</div>'
       + imgs.map((im,i) => '<div class="dir-card dir-img"><div class="dir-img-t">🖼️ '+esc(im.titulo)+'</div>'
           + '<button type="button" class="dir-img-mini" data-info-img="'+i+'" aria-label="Abrir '+esc(im.titulo)+' inteira"><img src="'+esc(im.src)+'" alt="'+esc(im.titulo)+'" width="'+im.w+'" height="'+im.h+'" loading="lazy" decoding="async"></button>'
-          + '<button type="button" class="dir-img-btn" data-info-img="'+i+'">🔍 Abrir imagem inteira</button></div>').join('')
-      + (arq.length ? '<div class="dir-card dir-arqs">'+arq.map(a => '<a class="pdf-link" href="'+esc(a.url)+'" target="_blank" rel="noopener">'+(a.interno?'🔒 ':'')+esc(a.titulo)+'</a>').join('')+'</div>'
+          + '<div class="dir-img-acts"><button type="button" class="dir-img-btn" data-info-img="'+i+'">🔍 Abrir imagem inteira</button>'
+          + '<button type="button" class="dir-img-btn" data-share-img="'+i+'">📤 Compartilhar</button></div></div>').join('')   // v187
+      + (arq.length ? '<div class="dir-card dir-arqs">'+arq.map((a,j) => '<span class="dir-arq"><a class="pdf-link" href="'+esc(a.url)+'" target="_blank" rel="noopener">'+(a.interno?'🔒 ':'')+esc(a.titulo)+'</a>'
+                      + '<button type="button" class="dir-share" data-share-arq="'+j+'" aria-label="Compartilhar '+esc(a.titulo)+'">📤 Compartilhar</button></span>').join('')+'</div>'   // v187
                     : (imgs.length ? '' : '<div class="dir-card"><span class="dir-v vazio">Nenhum arquivo anexado a este compromisso ainda.</span></div>'))
+      + '<div class="dir-share-msg" role="status" aria-live="polite"></div>'   // v187: aviso curto do Compartilhar
       + '</section>';
   }
   // visualizador da imagem inteira: abre por cima do painel; "Tamanho real" mostra os pixels originais com rolagem
@@ -3925,9 +3967,12 @@ a.dir-nome:hover{text-decoration:underline;}
     infoEl = document.createElement('div'); infoEl.className = 'mv-info-modal'; infoEl.setAttribute('role','dialog'); infoEl.setAttribute('aria-modal','true'); infoEl.setAttribute('aria-label','Informações do evento');
     infoEl.innerHTML = '<div class="mv-info-card">'+infoHtml()+'</div>';
     document.body.appendChild(infoEl); document.body.classList.add('mv-info-open');
+    imagensEvento().forEach(im => { prepararArquivo(im).catch(() => {}); });   // v187: deixa a imagem pronta para o Compartilhar
     infoEl.addEventListener('click', ev => {
       if(ev.target === infoEl || ev.target.closest('[data-info-fechar]')){ fecharInfo(); return; }
       if(ev.target.closest('[data-info-geral]')){ fecharInfo(); acao('geral'); }
+      const si = ev.target.closest('[data-share-img]'); if(si){ const im = imagensEvento()[+si.dataset.shareImg]; if(im) compartilharImagem(im, infoEl); return; }   // v187
+      const sa = ev.target.closest('[data-share-arq]'); if(sa){ const a = arquivosDiretorio()[+sa.dataset.shareArq]; if(a) compartilharLink(a, infoEl); return; }   // v187
       const bi = ev.target.closest('[data-info-img]'); if(bi){ const im = imagensEvento()[+bi.dataset.infoImg]; if(im) abrirImagem(im); }
     });
     const x = infoEl.querySelector('[data-info-fechar]'); if(x) x.focus({preventScroll:true});
