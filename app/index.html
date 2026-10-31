@@ -3619,10 +3619,12 @@ a.dir-nome:hover{text-decoration:underline;}
   let editando = false;
   // v184: ao abrir o Cronograma, rola uma vez até o "Agora" (ou "Próximo", ou o painel de hoje) depois que os dados carregam
   let rolagemAgoraPendente = false;
+  // v185: o cronograma está mesmo na tela (não escondido, fora do calendário)?
+  const cronoNaTela = () => !view.hidden && !!view.getClientRects().length && !document.body.classList.contains('agenda-mode');
   function rolarParaCompromissoAtual(){
     // a cápsula de navegação volta a página ao topo logo depois de trocar de aba; por isso a rolagem vem no quadro seguinte
     requestAnimationFrame(()=>{
-      if(view.hidden || editando || !view.getClientRects().length) return;
+      if(editando || !cronoNaTela()) return;   // v185
       const alvo = view.querySelector('.slot.now') || view.querySelector('.slot.next') || view.querySelector('.panel.hoje');
       if(!alvo) return;
       // posição real do cartão (sem a animação de entrada) menos o scroll-padding-top (--mv-topo) da página
@@ -3632,9 +3634,14 @@ a.dir-nome:hover{text-decoration:underline;}
     });
   }
   // v184: ao abrir o evento pelo calendário o cronograma aparece só por troca de classe (sem render): rola nessa hora, uma vez
-  new MutationObserver(()=>{
-    if(rolagemAgoraPendente && carregado && view.getClientRects().length){ rolagemAgoraPendente = false; rolarParaCompromissoAtual(); }
-  }).observe(document.body, {attributes:true, attributeFilter:['class']});
+  // v185: consome a intenção só com dados carregados, cronograma na tela e página já carregada
+  function consumirRolagem(){
+    if(rolagemAgoraPendente && carregado && cronoNaTela() && document.readyState!=='loading'){ rolagemAgoraPendente = false; rolarParaCompromissoAtual(); }
+  }
+  new MutationObserver(consumirRolagem).observe(document.body, {attributes:true, attributeFilter:['class']});
+  window.addEventListener('load', consumirRolagem);   // v185: página aberta direto no cronograma (sem passar pelo calendário)
+  // v185: o calendário chama ao abrir um evento na aba Cronograma; se os dados ainda estiverem chegando, o render rola quando chegarem
+  window.__mvRolarAgora = () => { rolagemAgoraPendente = true; requestAnimationFrame(consumirRolagem); };
   let form = null;             // {tipo:'dia'|'item', diaId, itemId}
   let modelosAbertos = false;   // lista "Modelos salvos" começa recolhida a cada novo item (não é salvo)
   let confirmar = null;        // {tipo, diaId, itemId}
@@ -4090,7 +4097,7 @@ a.dir-nome:hover{text-decoration:underline;}
     }
     h += '<div class="crono-diag">'+esc(window.__mvDiag || ('Acesso detectado: banco = '+(semBanco?'indisponível':'carregando…')))+'</div>';
     view.innerHTML = h; bind();
-    if(rolagemAgoraPendente && carregado && view.getClientRects().length){ rolagemAgoraPendente = false; rolarParaCompromissoAtual(); }   // v184: só quando o cronograma está na tela
+    consumirRolagem();   // v184/v185: só com o cronograma na tela e a página já carregada
   }
 
   // ---------- ações ----------
@@ -5468,6 +5475,7 @@ a.dir-nome:hover{text-decoration:underline;}
     window.__mvAgenda.abrir(wid);
     body.classList.remove('agenda-mode');
     window.scrollTo(0,0);
+    if(window.__mvRolarAgora && body.classList.contains('view-crono')) window.__mvRolarAgora();   // v185: abriu na aba Cronograma
     const b = document.getElementById('mvBack'); if(b) b.focus({preventScroll:true});
   }
   function voltar(){ body.classList.add('agenda-mode'); render(); window.scrollTo(0,0); }
@@ -5633,7 +5641,9 @@ body.has-install-bar #mvTopo{bottom:calc(150px + env(safe-area-inset-bottom,0px)
     const a = window.__mvAgenda; const lista = (a && a.lista) ? a.lista() : [];
     const wid = lista.some(x => x.id === window.__mvWeek) ? window.__mvWeek : (lista[0] || {}).id;
     if(!wid) return false;
-    a.abrir(wid); body.classList.remove('agenda-mode'); return true;
+    a.abrir(wid); body.classList.remove('agenda-mode');
+    if(window.__mvRolarAgora && body.classList.contains('view-crono')) window.__mvRolarAgora();   // v185
+    return true;
   };
   const ativo = () => {
     let k = 'cal';
