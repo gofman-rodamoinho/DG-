@@ -3678,6 +3678,20 @@ a.dir-nome:hover{text-decoration:underline;}
   }
   window.addEventListener('scroll', () => { if(dhRaf) return; dhRaf = requestAnimationFrame(() => { dhRaf = 0; marcarDhPreso(); }); }, { passive:true });
   window.addEventListener('resize', () => marcarDhPreso());
+  // v191: recolhe o painel "Informações do dia" (mesmo efeito de tocar na faixa)
+  function recolherDh(){
+    const dh = view.querySelector('.dayhead.dh-v190.aberto'); if(!dh) return;
+    const bar = dh.querySelector('.dh-bar'); dh.classList.remove('aberto');
+    if(bar){ bar.setAttribute('aria-expanded', 'false'); dhAbertos[bar.dataset.dhToggle] = false; }
+    dhScroll = 0;
+  }
+  // v191: toque/clique real fora da faixa e do painel recolhe; dentro (notas, Salvar, endereço, Como chegar/Uber, PDF) não
+  document.addEventListener('click', ev => {
+    if(!ev.isTrusted || view.hidden) return;
+    const dh = view.querySelector('.dayhead.dh-v190.aberto'); if(!dh) return;
+    if(ev.target && ev.target.closest && ev.target.closest('.dayhead.dh-v190')) return;
+    recolherDh();
+  }, true);
   // v184: ao abrir o Cronograma, rola uma vez até o "Agora" (ou "Próximo", ou o painel de hoje) depois que os dados carregam
   let rolagemAgoraPendente = false;
   // v185: o cronograma está mesmo na tela (não escondido, fora do calendário)?
