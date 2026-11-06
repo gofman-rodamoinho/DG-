@@ -2684,6 +2684,22 @@ ${blocoPrevisao(p)}Please double-check your times and let us know if you have an
 Safe travels!`;
       return { assunto: `Trip reminder — ${metaAtual().nome} (${datasEN}) · ${p.nome}`, corpo: corpoL };
     }
+    if(!isEN(p) && tipo === 'lembranca' && state.view === 'rtm2'){
+      const corpoL = `Olá, ${p.nome}!
+
+Sua viagem está chegando, para o evento Rock the Mountain · 2º FDS, em 07/11/2026, Petrópolis (RJ).
+
+Estamos te enviando, em anexo, o PDF com as informações da sua viagem.
+
+Segue também o link do App com as informações:
+https://claude.ai/artifact/P8xAuQ9JLxnyQi8MZiKDzw
+
+Previsão para o dia 07/11 em Itaipava, Petrópolis (RJ): entre 20°C e 29°C, com chance de chuva à tarde.
+Dia quente, mas à noite pode refrescar. Leve uma blusinha e uma capa de chuva.
+
+Qualquer dúvida, estamos à disposição!`;
+      return { assunto: `Lembrete da sua viagem — ${metaAtual().nome} (${week.dates}) · ${p.nome}`, corpo: corpoL };
+    }
     if(!isEN(p) && tipo === 'lembranca'){
       const evento = metaAtual().nome + ' — ' + week.sub;
       const corpoL = `Olá, ${p.nome}
