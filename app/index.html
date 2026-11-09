@@ -4842,7 +4842,17 @@ a.dir-nome:hover{text-decoration:underline;}
   }
   function aplicaTodos(wid){
     const week = window.__mv.WEEKS[wid]; if(!week) return 0;
-    let n=0; (patchesPorSemana[wid]||[]).forEach(pt => { if(aplicaPatch(week, pt)) n++; });
+    const lista = patchesPorSemana[wid] || [], hoteisMigrados = [];
+    let n=0; lista.forEach((pt, i) => {
+      if(wid === 'semana1' && pt.tipo === 'pessoa-'){
+        const atual = achaPessoa(week.people, pt.nome);
+        if(atual && atual.hotel_stays && atual.hotel_stays.length && lista.slice(i + 1).some(prox => prox.tipo === 'pessoa+' && norm(prox.nome) === norm(atual.nome) && String(prox.em || '') > String(pt.em || ''))){
+          hoteisMigrados.push({ nome: atual.nome, stays: JSON.parse(JSON.stringify(atual.hotel_stays)) });
+        }
+      }
+      if(aplicaPatch(week, pt)) n++;
+    });
+    hoteisMigrados.forEach(h => { const p = week.people.find(x => norm(x.nome) === norm(h.nome)); if(p && (!p.hotel_stays || !p.hotel_stays.length)) p.hotel_stays = h.stays; });
     return n;
   }
 
