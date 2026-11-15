@@ -5587,12 +5587,12 @@ a.dir-nome:hover{text-decoration:underline;}
   function lista(){ const a0 = window.__mvAgenda; return soLiberados(aplicarCalEquipe(listaTudo()), !!(a0 && a0.staff && a0.staff())); }
   function listaTudo(){ try{
     TV_CACHE = {};
-    const a = window.__mvAgenda; const base = ((a && a.lista()) || []).filter(e => { const ds = diasShow(e); return !ds.length || ds[ds.length-1] >= hoje; });   // calendário só de hoje pra frente
-    if(!PLAN) return ((a && a.staff && a.staff()) ? base.concat(EXTRAS) : base).concat(novosEv().filter(e => e.dias[0] >= hoje));
+    const a = window.__mvAgenda; const base = (a && a.lista()) || [];   // evento passado continua visível: o card não some quando a data passa (Daniel, 14/11)
+    if(!PLAN) return ((a && a.staff && a.staff()) ? base.concat(EXTRAS) : base).concat(novosEv());
     const usados = new Set(), out = [];
     const espelho = espelhoManual(PLAN);
     PLAN.forEach(r => {
-      if(!r.dataISO || r.dataISO < hoje) return;
+      if(!r.dataISO) return;
       if(CANCELADOS.includes(r.linha)) return;   // fora do calendário (dados mantidos)
       const mv = espelho(r); if(mv === 'pular') return;   // linha-espelho de evento manual: o manual (ID original) segue como fonte da agenda
       const ev = mv ? null : base.find(b => (SHOWS[b.id]||[]).includes(r.dataISO) && mesmoNome(r.evento, b));   // pasta só com data + nome compatível
@@ -5601,7 +5601,7 @@ a.dir-nome:hover{text-decoration:underline;}
         out.push({ id:'pl'+r.linha, label:NOMES_LINHA[r.linha] || r.evento || '(sem nome na planilha)', curto:NOMES_LINHA[r.linha], sub:'· '+(r.cidade||''), dias:[r.dataISO], plan:r, oculto:!novoPl, publico:novoPl, semPasta:true, encerrado:false, periodo:null }); }
     });
     base.forEach(b => { if(!usados.has(b.id)) out.push(b); });
-    return out.concat(novosEv().filter(e => e.dias[0] >= hoje));
+    return out.concat(novosEv());
   }catch(e){ return []; } }
   function cidade(ev){ const p = String(ev.sub||'').split('·'); return (p.length>1 ? p.slice(1).join('·') : '').trim(); }
   function quando(ev){ const ds = diasShow(ev); if(!ds.length){ const p = String(ev.sub||'').split('·'); return (p[0]||'').trim(); }
@@ -5631,8 +5631,7 @@ a.dir-nome:hover{text-decoration:underline;}
   function limites(evs){
     const ds = evs.flatMap(e=>diasShow(e).concat(diasVoo(e.id), diasOnibus(e.id))).sort();
     if(!ds.length) return null;
-    const ini = ds[0].slice(0,7) < hoje.slice(0,7) ? hoje.slice(0,7) : ds[0].slice(0,7);
-    return [ini, ds[ds.length-1].slice(0,7)];
+    return [ds[0].slice(0,7), ds[ds.length-1].slice(0,7)];   // pode voltar aos meses com eventos passados (Daniel, 14/11)
   }
   function abrir(wid){
     if(!(window.__mvAgenda)) return;
@@ -5691,7 +5690,7 @@ a.dir-nome:hover{text-decoration:underline;}
     document.getElementById('calAtual').textContent = em && !isNaN(em) ? 'Agenda da planilha "Anitta @ Scheduled Shows 2026/2027" atualizada em ' + em.toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'}) + '.' : '';
     const salto = document.getElementById('calSalto'), box = document.getElementById('calSaltoBox');
     if(staff && PLAN){
-      const meses = [...new Set(evs.flatMap(e=>diasShow(e)).map(d=>d.slice(0,7)))].filter(k => k >= hoje.slice(0,7)).sort();
+      const meses = [...new Set(evs.flatMap(e=>diasShow(e)).map(d=>d.slice(0,7)))].sort();
       const html = meses.map(k=>'<option value="'+k+'"'+(k===chave?' selected':'')+'>'+MES[+k.slice(5,7)-1]+' '+k.slice(0,4)+'</option>').join('');
       if(salto.dataset.k !== html){ salto.innerHTML = html; salto.dataset.k = html; }
       salto.value = meses.includes(chave) ? chave : '';
